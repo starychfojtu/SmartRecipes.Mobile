@@ -34,7 +34,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             return new SignInResponse(false, "");
         }
 
-        public async Task<Option<SignUpResponse>> Post(SignUpRequest request)
+        public async Task<SignUpResponse> Post(SignUpRequest request)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             }
 
             // Return mocked fake result with fake account.
-            return new SignUpResponse(new SignUpResponse.Account("test@gmail.com"));
+            return new SignUpResponse(new SignUpResponse.Account("test@gmail.com", new System.Guid("121fsaf2")));
         }
 
         public async Task<Option<ShoppingListResponse>> Post(ChangeFoodstuffAmountRequest request)
