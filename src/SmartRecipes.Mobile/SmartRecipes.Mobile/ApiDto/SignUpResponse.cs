@@ -1,4 +1,6 @@
-﻿namespace SmartRecipes.Mobile.ApiDto
+﻿using System;
+
+namespace SmartRecipes.Mobile.ApiDto
 {
     public class SignUpResponse
     {
@@ -11,12 +13,15 @@
 
         public class Account
         {
-            public Account(string email)
+            public Account(string email, Guid id)
             {
                 Email = email;
+                Id = id;
             }
 
             public string Email { get; }
+            
+            public Guid Id { get; }
         }
     }
 }
