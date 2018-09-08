@@ -18,6 +18,18 @@ namespace SmartRecipes.Mobile.WriteModels
                 () => new AuthenticationResult(success: false, token: None)
             );
         }
+
+        public static async Task<Option<SignUpResult>> SignUp(ApiClient apiClient, SignUpCredentials credentials)
+        {
+            var request = new SignUpRequest(
+                credentials.FirstName,
+                credentials.LastName,
+                credentials.Email,
+                credentials.Password
+            );
+            var response = await apiClient.Post(request);
+            return new SignUpResult(new Account(response.NewAccount.Id, response.NewAccount.Email));
+        }
     }
 
     public class AuthenticationResult
@@ -31,5 +43,18 @@ namespace SmartRecipes.Mobile.WriteModels
         public bool Success { get; }
 
         public Option<string> Token { get; }
+    }
+
+    public class SignUpResult
+    {
+        public SignUpResult(Account acc)
+        {
+            Acc = acc;
+            Success = true;
+        }
+
+        public Account Acc{ get; }
+
+        public bool Success { get; }
     }
 }

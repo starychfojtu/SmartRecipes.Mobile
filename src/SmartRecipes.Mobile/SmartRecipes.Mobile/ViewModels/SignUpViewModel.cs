@@ -1,17 +1,25 @@
-﻿using SmartRecipes.Mobile.Models;
+using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
 using SmartRecipes.Mobile.Infrastructure;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
-    public class SignInViewModel : ViewModel
+    public class SignUpViewModel : ViewModel
     {
         private readonly Enviroment enviroment;
 
-        public SignInViewModel(Enviroment enviroment)
+        public SignUpViewModel(Enviroment enviroment)
         {
             this.enviroment = enviroment;
+            FirstName = ValidatableObject.Create<string>(
+                s => Validation.NotEmpty(s) && Validation.IsLongerThan(s, 1),
+                _ => RaisePropertyChanged(nameof(Email))
+            );  
+            LastName = ValidatableObject.Create<string>(
+                s => Validation.NotEmpty(s) && Validation.IsLongerThan(s, 1),
+                _ => RaisePropertyChanged(nameof(Email))
+            );
             Email = ValidatableObject.Create<string>(
                 s => Validation.NotEmpty(s) && Validation.IsEmail(s),
                 _ => RaisePropertyChanged(nameof(Email))
@@ -22,23 +30,27 @@ namespace SmartRecipes.Mobile.ViewModels
             );
         }
 
+        public ValidatableObject<string> FirstName{ get; set; }
+
+        public ValidatableObject<string> LastName { get; set; }
+        
         public ValidatableObject<string> Email { get; set; }
 
         public ValidatableObject<string> Password { get; set; }
 
         public bool FormIsValid
         {
-            get { return Email.IsValid && Password.IsValid; }
+            get { return FirstName.IsValid && LastName.IsValid && Email.IsValid && Password.IsValid; }
         }
 
-        public async Task<bool> SignIn()
+        public async Task<bool> SignUp()
         {
             if (FormIsValid)
             {
-                var credentials = new SignInCredentials(Email.Data, Password.Data);
-                var authResult = await UserHandler.SignIn(enviroment.Api, credentials);
+                var credentials = new SignUpCredentials(FirstName.Data, LastName.Data, Email.Data, Password.Data);
+                var signUpResult = await UserHandler.SignUp(enviroment.Api, credentials);
 
-                if (authResult.Success)
+                if (signUpResult)
                 {
                     await enviroment.Db.Seed();
                     await Navigation.OpenApp();
@@ -46,11 +58,6 @@ namespace SmartRecipes.Mobile.ViewModels
                 }
             }
             return false;
-        }
-
-        public async Task SignUp()
-        {
-            await Navigation.SignUp();
         }
     }
 }

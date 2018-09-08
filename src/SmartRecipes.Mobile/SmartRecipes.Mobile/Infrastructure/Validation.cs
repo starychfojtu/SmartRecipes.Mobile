@@ -14,6 +14,11 @@ namespace SmartRecipes.Mobile.Infrastructure
             return !Empty(input);
         }
 
+        public static bool IsLongerThan(string input, int minimum)
+        {
+            return input.Length >= minimum;
+        }
+
         public static bool IsEmail(string email)
         {
             string validEmailPattern = @"^(?!\.)(""([^""\r\\]|\\[""\r\\])*""|"

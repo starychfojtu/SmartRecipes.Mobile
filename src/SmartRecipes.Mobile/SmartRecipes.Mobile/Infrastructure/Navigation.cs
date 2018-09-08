@@ -9,7 +9,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 {
     public static class Navigation
     {
-        public static async Task LogIn()
+        public static async Task OpenApp()
         {
             Application.Current.MainPage = new NavigationPage(await PageFactory.GetPageAsync<AppContainer>());
         }

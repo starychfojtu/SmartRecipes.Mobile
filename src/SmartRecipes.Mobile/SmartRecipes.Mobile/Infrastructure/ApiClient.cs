@@ -34,18 +34,22 @@ namespace SmartRecipes.Mobile.Infrastructure
             return new SignInResponse(false, "");
         }
 
-        public async Task<Option<SignUpResponse>> Post(SignUpRequest request)
+        // @TOOD: Return Either of Success and Error with message from api.
+        public async Task<SignUpResponse> Post(SignUpRequest request)
         {
             try
             {
+                // @TODO: Fire request to actual API.
                 await SimulateRequest();
             }
             catch (HttpRequestException)
             {
-                return Prelude.None;
+                // Do nothing for now.
             }
 
-            return Prelude.None;
+            // @TODO: return response basad on api result.
+            // Return mocked fake result with fake account.
+            return new SignUpResponse(new SignUpResponse.Account("test@gmail.com", new System.Guid("121fsaf2")));
         }
 
         public async Task<Option<ShoppingListResponse>> Post(ChangeFoodstuffAmountRequest request)
