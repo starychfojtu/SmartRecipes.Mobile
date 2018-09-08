@@ -41,7 +41,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 if (authResult.Success)
                 {
                     await enviroment.Db.Seed();
-                    await Navigation.LogIn();
+                    await Navigation.OpenApp();
                     return true;
                 }
             }
