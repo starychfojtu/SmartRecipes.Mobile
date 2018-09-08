@@ -34,6 +34,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             return new SignInResponse(false, "");
         }
 
+        // @TOOD: Return Either of Success and Error with message from api.
         public async Task<SignUpResponse> Post(SignUpRequest request)
         {
             try
@@ -46,6 +47,7 @@ namespace SmartRecipes.Mobile.Infrastructure
                 // Do nothing for now.
             }
 
+            // @TODO: return response basad on api result.
             // Return mocked fake result with fake account.
             return new SignUpResponse(new SignUpResponse.Account("test@gmail.com", new System.Guid("121fsaf2")));
         }
