@@ -38,14 +38,16 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             try
             {
+                // @TODO: Fire request to actual API.
                 await SimulateRequest();
             }
             catch (HttpRequestException)
             {
-                return Prelude.None;
+                // Do nothing for now.
             }
 
-            return Prelude.None;
+            // Return mocked fake result with fake account.
+            return new SignUpResponse(new SignUpResponse.Account("test@gmail.com"));
         }
 
         public async Task<Option<ShoppingListResponse>> Post(ChangeFoodstuffAmountRequest request)
