@@ -1,113 +1,67 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using LanguageExt;
 using SmartRecipes.Mobile.ApiDto;
+using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.Infrastructure
-{
-    // TODO: make static
-    public class ApiClient
+{   
+    public static class ApiClient
     {
-        private readonly HttpClient client;
-
-        public ApiClient(HttpClient client)
+        public static Monad.Reader<HttpClient, Task<Either<SignInResponse, ApiError>>> Post(SignInRequest request)
         {
-            this.client = client;
+            return Post<SignInRequest, SignInResponse>(request, "/signIn");
+        }
+        
+        public static Monad.Reader<HttpClient, Task<Either<SignUpResponse, ApiError>>> Post(SignUpRequest request)
+        {
+            return Post<SignUpRequest, SignUpResponse>(request, "/signIn");
+        }
+        
+        public static Monad.Reader<HttpClient, Task<Either<ChangeFoodstuffAmountResponse, ApiError>>> Post(ChangeFoodstuffAmountRequest request)
+        {
+            return Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/signIn");
+        }
+        
+        private static Monad.Reader<HttpClient, Task<Either<TResponse, ApiError>>> Post<TRequest, TResponse>(TRequest request, string route)
+        {
+            return client =>
+            {
+                var body = JsonConvert.SerializeObject(request);
+                var response = client.PostAsync(route, new StringContent(body));
+                return response.Map(r => 
+                    r.IsSuccessStatusCode 
+                        ? Success(JsonConvert.DeserializeObject<TResponse>(r.Content.ToString())) 
+                        : Error<TResponse>(new ApiError(r.Content.ToString(), r.StatusCode))
+                );
+            };
+        }
+        
+        public static Monad.Reader<HttpClient, Task<Either<SearchFoodstuffResponse, ApiError>>> Get(SearchFoodstuffRequest request)
+        {
+            return Post<SearchFoodstuffRequest, SearchFoodstuffResponse>(request, "/foodstuffs/");
         }
 
-        public async Task<Option<SignInResponse>> Post(SignInRequest request)
+        public static Monad.Reader<HttpClient, Task<Either<ShoppingListResponse, ApiError>>> GetShoppingList()
         {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                // Do nothing for now
-            }
-
-            if (request.Email == "test@gmail.com" && request.Password == "1234")
-            {
-                return new SignInResponse(true, "");
-            }
-
-            return new SignInResponse(false, "");
+            throw new NotImplementedException();
         }
 
-        public async Task<Option<SignUpResponse>> Post(SignUpRequest request)
+        public static Monad.Reader<HttpClient, Task<Option<MyRecipesResponse>>> GetMyRecipes()
         {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                return Prelude.None;
-            }
-
-            return Prelude.None;
+            throw new NotImplementedException();
         }
-
-        public async Task<Option<ShoppingListResponse>> Post(ChangeFoodstuffAmountRequest request)
+        
+        private static Either<T, ApiError> Success<T>(T value)
         {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                return Prelude.None;
-            }
-
-            return await GetShoppingList();
+            return Left(value);
         }
-
-        public async Task<Option<ShoppingListResponse>> GetShoppingList()
+        
+        private static Either<T, ApiError> Error<T>(ApiError error)
         {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                return Prelude.None;
-            }
-
-            return Prelude.None;
-        }
-
-        public async Task<Option<MyRecipesResponse>> GetMyRecipes()
-        {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                return Prelude.None;
-            }
-
-            return Prelude.None;
-        }
-
-        public async Task<Option<SearchFoodstuffResponse>> SearchFoodstuffs(SearchFoodstuffRequest request)
-        {
-            try
-            {
-                await SimulateRequest();
-            }
-            catch (HttpRequestException)
-            {
-                return Prelude.None;
-            }
-
-            return Prelude.None;
-        }
-
-        private Task SimulateRequest()
-        {
-            // API is not connected yet - turned off
-            throw new HttpRequestException();
+            return Right(error);
         }
     }
 }

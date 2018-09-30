@@ -14,12 +14,13 @@ namespace SmartRecipes.Mobile.ReadModels
     {
         public static Monad.Reader<Enviroment, Task<IEnumerable<IRecipe>>> GetMyRecipes()
         {
-            return Repository.RetrievalAction(
-                client => client.GetMyRecipes(),
-                env => env.Db.Recipes.ToEnumerableAsync<Recipe, IRecipe>(),
-                response => response.Recipes.Select(r => ToRecipe(r)),
-                recipes => recipes
-            );
+            throw new NotImplementedException();
+//            return Repository.RetrievalAction(
+//                _ => ApiClient.GetMyRecipes(),
+//                env => env.Db.Recipes.ToEnumerableAsync<Recipe, IRecipe>(),
+//                response => response.Recipes.Select(r => ToRecipe(r)),
+//                recipes => recipes
+//            );
         }
         
         public static Monad.Reader<Enviroment, Task<IEnumerable<RecipeDetail>>> GetMyRecipeDetails()

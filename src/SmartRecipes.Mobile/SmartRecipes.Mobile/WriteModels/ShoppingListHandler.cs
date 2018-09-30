@@ -46,7 +46,9 @@ namespace SmartRecipes.Mobile.WriteModels
                 var ownerId = recipeItem.RecipeInShoppingList.ShoppingListOwnerId;
                 var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(recipeItem);
                 var shoppingListItemsTask = ShoppingListRepository.GetItems(ownerId)(enviroment);
-                var itemDictionaryTask = shoppingListItemsTask.Map(items => items.ToImmutableDictionary(i => i.Foodstuff, i => i.ItemAmount));
+                var itemDictionaryTask = shoppingListItemsTask.Map(
+                    items => items.ToImmutableDictionary(i => i.Foodstuff, i => i.ItemAmount)
+                );
 
                 var substractedItemsTask = itemDictionaryTask.Map(dict =>
                 {
@@ -108,7 +110,7 @@ namespace SmartRecipes.Mobile.WriteModels
             foreach (var itemAmount in itemAmounts)
             {
                 var request = new ChangeFoodstuffAmountRequest(itemAmount.FoodstuffId, itemAmount.Amount);
-                var response = await enviroment.Api.Post(request);
+                var response = await ApiClient.Post(request)(enviroment.HttpClient);
             }
 
             await enviroment.Db.UpdateAsync((IEnumerable<IShoppingListItemAmount>) itemAmounts);

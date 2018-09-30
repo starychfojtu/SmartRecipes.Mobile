@@ -23,8 +23,8 @@ namespace SmartRecipes.Mobile.Infrastructure
 
             // Services
             builder.RegisterInstance(new HttpClient()).As<HttpClient>();
-            builder.RegisterType<ApiClient>().SingleInstance();
             builder.RegisterType<Database>().SingleInstance();
+            builder.RegisterType<HttpClient>().SingleInstance();
             builder.RegisterType<Enviroment>().SingleInstance();
 
             // View models

@@ -36,7 +36,7 @@ namespace SmartRecipes.Mobile.ViewModels
             if (FormIsValid)
             {
                 var credentials = new SignInCredentials(Email.Data, Password.Data);
-                var authResult = await UserHandler.SignIn(enviroment.Api, credentials);
+                var authResult = await UserHandler.SignIn(credentials)(enviroment);
 
                 if (authResult.Success)
                 {

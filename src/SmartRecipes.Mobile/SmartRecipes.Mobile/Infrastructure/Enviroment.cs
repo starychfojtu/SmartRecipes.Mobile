@@ -1,14 +1,18 @@
-﻿namespace SmartRecipes.Mobile.Infrastructure
+﻿using System;
+using System.Net.Http;
+
+namespace SmartRecipes.Mobile.Infrastructure
 {
     public class Enviroment
     {
-        public Enviroment(ApiClient apiClient, Database database)
+        public Enviroment(HttpClient httpClient, Database database)
         {
-            Api = apiClient;
+            HttpClient = httpClient;
             Db = database;
+            HttpClient.BaseAddress = new Uri("https://smart-recipes.herokuapp.com");
         }
 
-        public ApiClient Api { get; }
+        public HttpClient HttpClient { get; }
 
         public Database Db { get; }
     }

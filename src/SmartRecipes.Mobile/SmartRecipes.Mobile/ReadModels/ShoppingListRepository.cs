@@ -15,12 +15,13 @@ namespace SmartRecipes.Mobile.ReadModels
     {
         public static Monad.Reader<Enviroment, Task<IEnumerable<ShoppingListItem>>> GetItems(Guid ownerId)
         {
-            return Repository.RetrievalAction(
-                client => client.GetShoppingList(),
-                GetShoppingListItems(),
-                response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
-                items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
-            );
+            throw new NotImplementedException();
+//            return Repository.RetrievalAction(
+//                client => client.GetShoppingList(),
+//                GetShoppingListItems(),
+//                response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
+//                items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
+//            );
         }
 
         public static Monad.Reader<Enviroment, Task<IEnumerable<ShoppingListRecipeItem>>> GetRecipeItems(IAccount owner)

@@ -9,14 +9,17 @@ namespace SmartRecipes.Mobile.WriteModels
 {
     public static class UserHandler
     {
-        public static async Task<AuthenticationResult> SignIn(ApiClient apiClient, SignInCredentials credentials)
+        public static Monad.Reader<Enviroment, Task<AuthenticationResult>> SignIn(SignInCredentials credentials)
         {
-            var request = new SignInRequest(credentials.Email, credentials.Password);
-            var response = await apiClient.Post(request);
-            return response.Match(
-                r => new AuthenticationResult(r.IsAuthorized, r.Token),
-                () => new AuthenticationResult(success: false, token: None)
-            );
+            return env =>
+            {
+                var request = new SignInRequest(credentials.Email, credentials.Password);
+                var response = ApiClient.Post(request)(env.HttpClient);
+                return response.Map(r => r.Match(
+                    e => new AuthenticationResult(success: false, token: None),
+                    s => new AuthenticationResult(s.IsAuthorized, s.Token)
+                ));
+            };
         }
     }
 
