@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using LanguageExt;
@@ -17,7 +18,7 @@ namespace SmartRecipes.Mobile.Infrastructure
         
         public static Monad.Reader<HttpClient, Task<Either<SignUpResponse, ApiError>>> Post(SignUpRequest request)
         {
-            return Post<SignUpRequest, SignUpResponse>(request, "/signIn");
+            return Post<SignUpRequest, SignUpResponse>(request, "/signUp");
         }
         
         public static Monad.Reader<HttpClient, Task<Either<ChangeFoodstuffAmountResponse, ApiError>>> Post(ChangeFoodstuffAmountRequest request)
@@ -29,12 +30,13 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             return client =>
             {
-                var body = JsonConvert.SerializeObject(request);
-                var response = client.PostAsync(route, new StringContent(body));
-                return response.Map(r => 
+                var json = JsonConvert.SerializeObject(request);
+                var content = new StringContent(json.ToString(), Encoding.UTF8, "application/json");
+                var response = client.PostAsync(route, content);
+                return response.Bind(r => 
                     r.IsSuccessStatusCode 
-                        ? Success(JsonConvert.DeserializeObject<TResponse>(r.Content.ToString())) 
-                        : Error<TResponse>(new ApiError(r.Content.ToString(), r.StatusCode))
+                        ? r.Content.ReadAsStringAsync().Map(c => Success(JsonConvert.DeserializeObject<TResponse>(c))) 
+                        : Task.FromResult(Error<TResponse>(new ApiError(r.Content.ToString(), r.StatusCode)))
                 );
             };
         }

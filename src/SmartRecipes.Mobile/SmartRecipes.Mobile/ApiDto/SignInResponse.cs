@@ -1,15 +1,14 @@
-﻿namespace SmartRecipes.Mobile.ApiDto
+﻿using System;
+using Newtonsoft.Json;
+
+namespace SmartRecipes.Mobile.ApiDto
 {
     public class SignInResponse
     {
-        public SignInResponse(bool isAuthorized, string token)
-        {
-            IsAuthorized = isAuthorized;
-            Token = token;
-        }
-
-        public bool IsAuthorized { get; }
-
+        [JsonProperty("value")]
         public string Token { get; }
+
+        [JsonProperty("accountId")]
+        public Guid AccountId { get; }
     }
 }

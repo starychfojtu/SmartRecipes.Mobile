@@ -1,22 +1,14 @@
-﻿namespace SmartRecipes.Mobile.ApiDto
+﻿using System;
+using Newtonsoft.Json;
+
+namespace SmartRecipes.Mobile.ApiDto
 {
     public class SignUpResponse
     {
-        public SignUpResponse(Account account)
-        {
-            NewAccount = account;
-        }
-
-        public Account NewAccount { get; }
-
-        public class Account
-        {
-            public Account(string email)
-            {
-                Email = email;
-            }
-
-            public string Email { get; }
-        }
+        [JsonProperty("id")]
+        public Guid Id { get; set; }
+        
+        [JsonProperty("email")]
+        public string Email { get; set; }
     }
 }

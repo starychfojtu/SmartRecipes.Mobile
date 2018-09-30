@@ -1,4 +1,6 @@
-﻿namespace SmartRecipes.Mobile.ApiDto
+﻿using Newtonsoft.Json;
+
+namespace SmartRecipes.Mobile.ApiDto
 {
     public class SignUpRequest
     {
@@ -10,12 +12,16 @@
             Password = password;
         }
 
+        [JsonIgnore]
         public string FirstName { get; }
 
+        [JsonIgnore]
         public string LastName { get; }
 
+        [JsonProperty("email")]
         public string Email { get; }
 
+        [JsonProperty("password")]
         public string Password { get; }
     }
 }

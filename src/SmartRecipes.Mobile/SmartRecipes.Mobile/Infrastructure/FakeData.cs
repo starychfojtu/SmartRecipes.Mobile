@@ -47,7 +47,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public static IAccount FakeAccount()
         {
-            return new Account(Guid.Parse("13cb78ee-0aca-4287-9ecb-b87b4e83411b"), "test@gmail.com");
+            return new Account(Guid.Parse("13cb78ee-0aca-4287-9ecb-b87b4e83411b"), "test@gmail.com", new AccessToken("fake"));
         }
 
         public static IEnumerable<Recipe> FakeRecipes()

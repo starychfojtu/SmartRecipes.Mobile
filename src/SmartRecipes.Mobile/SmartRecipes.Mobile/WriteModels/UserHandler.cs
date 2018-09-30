@@ -9,30 +9,23 @@ namespace SmartRecipes.Mobile.WriteModels
 {
     public static class UserHandler
     {
-        public static Monad.Reader<Enviroment, Task<AuthenticationResult>> SignIn(SignInCredentials credentials)
+        public enum AuthenticationError
+        {
+            InvalidCredentials,
+            NoConnection
+        }
+        
+        public static Monad.Reader<Enviroment, Task<Either<IAccount, AuthenticationError>>> SignIn(SignInCredentials credentials)
         {
             return env =>
             {
                 var request = new SignInRequest(credentials.Email, credentials.Password);
                 var response = ApiClient.Post(request)(env.HttpClient);
                 return response.Map(r => r.Match(
-                    e => new AuthenticationResult(success: false, token: None),
-                    s => new AuthenticationResult(s.IsAuthorized, s.Token)
+                    e => Right<IAccount, AuthenticationError>(AuthenticationError.InvalidCredentials),
+                    a => Left<IAccount, AuthenticationError>(new Account(a.AccountId, credentials.Email, new AccessToken(a.Token)))
                 ));
             };
         }
-    }
-
-    public class AuthenticationResult
-    {
-        public AuthenticationResult(bool success, Option<string> token)
-        {
-            Success = success;
-            Token = token;
-        }
-
-        public bool Success { get; }
-
-        public Option<string> Token { get; }
     }
 }

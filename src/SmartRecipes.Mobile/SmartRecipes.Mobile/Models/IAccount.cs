@@ -7,5 +7,7 @@ namespace SmartRecipes.Mobile.Models
         Guid Id { get; }
 
         string Email { get; }
+        
+        AccessToken AccessToken { get; }
     }
 }

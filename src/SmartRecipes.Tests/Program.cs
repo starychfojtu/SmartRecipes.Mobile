@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Net.Http;
+using SmartRecipes.Mobile.ApiDto;
+using SmartRecipes.Mobile.Infrastructure;
 
 namespace SmartRecipes.Tests
 {
@@ -6,7 +8,6 @@ namespace SmartRecipes.Tests
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
         }
     }
 }
