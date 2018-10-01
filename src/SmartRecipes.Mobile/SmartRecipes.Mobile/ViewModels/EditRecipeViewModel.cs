@@ -83,7 +83,7 @@ namespace SmartRecipes.Mobile.ViewModels
             return MyRecipesHandler.Add(enviroment, recipe, getIngredients(recipe));
         }
 
-        public async Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
+        public Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
         {
             var recipe = Models.Recipe.Create(
                 Recipe.Id.Value,
@@ -94,7 +94,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 Recipe.Text
             );
 
-            await MyRecipesHandler.Update(enviroment, recipe, getIngredients(recipe));
+            return MyRecipesHandler.Update(enviroment, recipe, getIngredients(recipe));
         }
 
         private Task<Unit> ChangeAmount(IFoodstuff foodstuff, Func<IAmount, IAmount, IOption<IAmount>> action)

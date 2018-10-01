@@ -38,7 +38,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 var credentials = new SignInCredentials(Email.Data, Password.Data);
                 var authResult = await UserHandler.SignIn(credentials)(enviroment);
 
-                if (authResult.IsLeft)
+                if (authResult.IsFirst)
                 {
                     await enviroment.Db.Seed();
                     await Navigation.LogIn();

@@ -27,7 +27,7 @@ namespace SmartRecipes.Mobile.Controls
                 IsDestructive = destructive,
                 Icon = action.Icon.ImageName
             }; 
-            return item.Tee(i => i.Clicked += async (sender, e) => await UserMessage.PopupAction(() => action.Action(Unit.Value)));
+            return item.Tee(i => i.Clicked += async (sender, e) => await UserMessage.PopupAction(action.Action));
         }
     }
 }

@@ -63,7 +63,7 @@ namespace SmartRecipes.Mobile.ViewModels
             UpdateShoppingListItems(newShoppingListItems);
         }
         
-        private Task<IOption<UserMessage>> DeleteItem(ShoppingListItem item)
+        private IOption<UserMessage> DeleteItem(ShoppingListItem item)
         {
             return ShoppingListHandler.RemoveFromShoppingList(enviroment, item, CurrentAccount).MapToUserMessage(_ =>
             {
@@ -87,7 +87,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 requiredAmounts.Get(item.Foodstuff),
                 () => ShoppingListItemAction(item, i => ShoppingListHandler.Increase(i)),
                 () => ShoppingListItemAction(item, i => ShoppingListHandler.Decrease(i)),
-                new UserAction<Unit>(_ => DeleteItem(item), Icon.Delete(), 1)
+                new UserAction<Unit>(_ => Task.FromResult(DeleteItem(item)), Icon.Delete(), 1)
             );
         }
     }

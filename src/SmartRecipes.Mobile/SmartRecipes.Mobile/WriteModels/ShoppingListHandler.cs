@@ -15,18 +15,15 @@ namespace SmartRecipes.Mobile.WriteModels
 {
     public static class ShoppingListHandler
     {
-        public static Monad.Reader<Enviroment, ITry<Task<Unit>>> AddToShoppingList(IRecipe recipe, IAccount owner, int personCount)
+        public static Monad.Reader<Enviroment, Task<Unit>> AddToShoppingList(IRecipe recipe, IAccount owner, int personCount)
         {
-            return env => Try.Create(unit =>
-            {
-                var a = ShoppingListRepository
-                    .GetRecipeItems(owner)
-                    .Select(items => items.FirstOption(i => i.Detail.Recipe.Equals(recipe)))
-                    .Bind(item => item.Match(
-                        i => AddPersonCount(i.RecipeInShoppingList, personCount),
-                        () => CreateRecipeInShoppingList(recipe, owner, personCount)
-                    ));
-            });
+            return  ShoppingListRepository
+                .GetRecipeItems(owner)
+                .Select(items => items.FirstOption(i => i.Detail.Recipe.Equals(recipe)))
+                .Bind(item => item.Match(
+                    i => AddPersonCount(i.RecipeInShoppingList, personCount),
+                    _ => CreateRecipeInShoppingList(recipe, owner, personCount)
+                ));
         }
         
         public static IShoppingListItemAmount Increase(ShoppingListItem item)
@@ -41,7 +38,6 @@ namespace SmartRecipes.Mobile.WriteModels
 
         public static ITry<Task<Unit>> Cook(Enviroment enviroment, ShoppingListRecipeItem recipeItem)
         {
-            // TODO: refactor, consider using linq
             return Try.Create(_ =>
             {
                 var ownerId = recipeItem.RecipeInShoppingList.ShoppingListOwnerId;
@@ -53,38 +49,37 @@ namespace SmartRecipes.Mobile.WriteModels
 
                 var substractedItemsTask = itemDictionaryTask.Map(dict =>
                 {
-                    return requiredAmounts.Fold(Optional(dict), (d, kvp) => d.Bind(items =>
+                    return requiredAmounts.Aggregate(dict.ToOption(), (d, kvp) => d.FlatMap(items =>
                     {
                         var (foodstuff, requiredAmount) = kvp;
                         var item = items[foodstuff];
 
                         if (Amount.IsLessThan(item.Amount, requiredAmount))
                         {
-                            return None;
+                            return Option.Empty<ImmutableDictionary<IFoodstuff, IShoppingListItemAmount>>();
                         }
 
-                        var newAmount = Amount.Substract(item.Amount, requiredAmount).IfNone(item.Amount);
-                        return Some(items.SetItem(foodstuff, item.WithAmount(newAmount)));
+                        var newAmount = Amount.Substract(item.Amount, requiredAmount).GetOrElse(item.Amount);
+                        return Option.Create(items.SetItem(foodstuff, item.WithAmount(newAmount)));
                     }));
                 });
                  
                 return substractedItemsTask.Bind(items =>
                 {
-                    var itemsToUpdate = items.IfNone(() => throw new InvalidOperationException("Not enought ingredients in shopping list."));
+                    var itemsToUpdate = items.Get(u => new InvalidOperationException("Not enought ingredients in shopping list."));
                     return enviroment.Db.UpdateAsync(itemsToUpdate.Values);
                 });
-            })
-            .Bind(_ => RemoveFromShoppingList(enviroment, recipeItem.RecipeInShoppingList));
+            }).FlatMap(_ => RemoveFromShoppingList(enviroment, recipeItem.RecipeInShoppingList));
         }
 
-        public static TryAsync<Unit> RemoveFromShoppingList(Enviroment enviroment, IRecipeInShoppingList recipe)
+        public static ITry<Task<Unit>> RemoveFromShoppingList(Enviroment enviroment, IRecipeInShoppingList recipe)
         {
-            return TryAsync(() => enviroment.Db.Delete(recipe));
+            return Try.Create(_ => enviroment.Db.Delete(recipe));
         }
         
-        public static TryAsync<Unit> RemoveFromShoppingList(Enviroment enviroment, ShoppingListItem item, IAccount owner)
+        public static ITry<Task<Unit>> RemoveFromShoppingList(Enviroment enviroment, ShoppingListItem item, IAccount owner)
         {
-            return TryAsync(() =>
+            return Try.Create(_ =>
             {
                 var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(owner)(enviroment);
                 return requiredAmounts.Bind(amounts => amounts.ContainsKey(item.Foodstuff)
@@ -96,14 +91,15 @@ namespace SmartRecipes.Mobile.WriteModels
 
         public static Task<IEnumerable<ShoppingListItem>> AddToShoppingList(Enviroment enviroment, IAccount owner, IEnumerable<IFoodstuff> foodstuffs)
         {
-            return
-                from shoppingListItems in ShoppingListRepository.GetItems(owner.Id)(enviroment)
-                let alreadyAddedFoodstuffs = shoppingListItems.Select(i => i.Foodstuff)
-                let newFoodstuffs = foodstuffs.Except(alreadyAddedFoodstuffs).ToImmutableDictionary(f => f.Id, f => f)
-                let newItemAmounts = newFoodstuffs.Values.Select(f => ShoppingListItemAmount.Create(owner, f, f.BaseAmount)).ToImmutableList()
-                from _1 in enviroment.Db.AddAsync(newItemAmounts)
-                from _2 in Update(enviroment, newItemAmounts)
-                select newItemAmounts.Select(fa => new ShoppingListItem(newFoodstuffs[fa.FoodstuffId], fa));
+            throw new NotImplementedException();
+//            return
+//                from shoppingListItems in ShoppingListRepository.GetItems(owner.Id)(enviroment)
+//                let alreadyAddedFoodstuffs = shoppingListItems.Select(i => i.Foodstuff)
+//                let newFoodstuffs = foodstuffs.Except(alreadyAddedFoodstuffs).ToImmutableDictionary(f => f.Id, f => f)
+//                let newItemAmounts = newFoodstuffs.Values.Select(f => ShoppingListItemAmount.Create(owner, f, f.BaseAmount)).ToImmutableList()
+//                from _1 in enviroment.Db.AddAsync(newItemAmounts)
+//                from _2 in Update(enviroment, newItemAmounts)
+//                select newItemAmounts.Select(fa => new ShoppingListItem(newFoodstuffs[fa.FoodstuffId], fa));
         }
 
         public static async Task<Unit> Update(Enviroment enviroment, IImmutableList<IShoppingListItemAmount> itemAmounts)
@@ -115,23 +111,26 @@ namespace SmartRecipes.Mobile.WriteModels
             }
 
             await enviroment.Db.UpdateAsync((IEnumerable<IShoppingListItemAmount>) itemAmounts);
-            return Unit.Default;
+            return Unit.Value;
         }
         
-        private static IShoppingListItemAmount ChangeAmount(Func<IAmount, IAmount, Option<IAmount>> action, ShoppingListItem item)
+        private static IShoppingListItemAmount ChangeAmount(Func<IAmount, IAmount, IOption<IAmount>> action, ShoppingListItem item)
         {
-            var newAmount = action(item.ItemAmount.Amount, item.Foodstuff.AmountStep).IfNone(() => throw new ArgumentException());
+            var newAmount = action(item.ItemAmount.Amount, item.Foodstuff.AmountStep).Get();
             return item.ItemAmount.WithAmount(newAmount);
         }
         
         private static Monad.Reader<Enviroment, Task<Unit>> CreateRecipeInShoppingList(IRecipe recipe, IAccount owner, int personCount)
         {
-            var newItemAmounts = await GetRecipeComplementOfShoppingList(recipe, owner)(enviroment);
+            return env =>
+            {
+                var newItemAmounts = GetRecipeComplementOfShoppingList(recipe, owner)(env);
 
-            await enviroment.Db.AddAsync(RecipeInShoppingList.Create(recipe, owner, personCount).ToEnumerable());
-            await enviroment.Db.AddAsync(newItemAmounts);
+                var recipeTask = env.Db.AddAsync(RecipeInShoppingList.Create(recipe, owner, personCount).ToEnumerable());
+                var amountsTask = newItemAmounts.Map(a => env.Db.AddAsync(a));
 
-            return Unit.Value;
+                return recipeTask.Bind(_ => amountsTask).ToUnit();
+            };
         }
 
         private static Monad.Reader<Enviroment, Task<Unit>> AddPersonCount(IRecipeInShoppingList recipe, int personCount)

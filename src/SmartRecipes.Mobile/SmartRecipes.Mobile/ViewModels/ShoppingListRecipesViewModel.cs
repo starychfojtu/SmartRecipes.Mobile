@@ -35,10 +35,10 @@ namespace SmartRecipes.Mobile.ViewModels
             UpdateRecipeItems(await ShoppingListRepository.GetRecipeItems(CurrentAccount)(enviroment));
         }
         
-        private IOption<UserMessage> RecipeDeleteAction(IRecipe recipe, Func<Enviroment, ShoppingListRecipeItem, ITry<Unit>> action)
+        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Enviroment, ShoppingListRecipeItem, ITry<Task<Unit>>> action)
         {
             var item = recipeItems.First(r => r.Detail.Recipe.Equals(recipe));
-            return action(enviroment, item).MapToUserMessage(_ =>
+            return action(enviroment, item).MapToUserMessageAsync(_ =>
             {
                 UpdateRecipeItems(recipeItems.Remove(item));
                 return UserMessage.Deleted().ToOption();
