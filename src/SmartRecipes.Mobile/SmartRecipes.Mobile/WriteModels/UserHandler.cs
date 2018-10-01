@@ -3,6 +3,10 @@ using System.Threading.Tasks;
 using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
+using Monad;
+using SmartRecipes.Mobile.ApiDto;
+using SmartRecipes.Mobile.Extensions;
+using Try = FuncSharp.Try;
 
 namespace SmartRecipes.Mobile.WriteModels
 {
@@ -14,18 +18,19 @@ namespace SmartRecipes.Mobile.WriteModels
             NoConnection
         }
         
-        public static Monad.Reader<Enviroment, Task<Coproduct2<IAccount, AuthenticationError>>> SignIn(SignInCredentials credentials)
+        public static Reader<Enviroment, Task<ITry<IAccount, AuthenticationError>>> SignIn(SignInCredentials credentials)
         {
-            throw new NotImplementedException();
-//            return env =>
-//            {
-//                var request = new SignInRequest(credentials.Email, credentials.Password);
-//                var response = ApiClient.Post(request)(env.HttpClient);
-//                return response.Map(r => r.Match(
-//                    e => Right<IAccount, AuthenticationError>(AuthenticationError.InvalidCredentials),
-//                    a => Left<IAccount, AuthenticationError>(new Account(a.AccountId, credentials.Email, new AccessToken(a.Token)))
-//                ));
-//            };
+            var request = new SignInRequest(credentials.Email, credentials.Password);
+            return ApiClient.Post(request).Map(r => r.Match(
+                response => Try.Success<IAccount, AuthenticationError>(ToAccount(response, credentials.Email)),
+                error => Try.Error<IAccount, AuthenticationError>(AuthenticationError.InvalidCredentials),
+                noConn => Try.Error<IAccount, AuthenticationError>(AuthenticationError.NoConnection)
+            ));
+        }
+
+        private static IAccount ToAccount(SignInResponse response, string email)
+        {
+            return new Account(response.AccountId, email, new AccessToken(response.Token));
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using FuncSharp;
+using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.Pages;
 using SmartRecipes.Mobile.ReadModels.Dto;
@@ -9,9 +11,11 @@ namespace SmartRecipes.Mobile.Infrastructure
 {
     public static class Navigation
     {
-        public static async Task LogIn()
+        public static Task<Unit> LogIn()
         {
-            Application.Current.MainPage = new NavigationPage(await PageFactory.GetPageAsync<AppContainer>());
+            return PageFactory.GetPageAsync<AppContainer>()
+                .Map(c => Application.Current.MainPage = new NavigationPage(c))
+                .ToUnit();
         }
 
         public static async Task SignUp()

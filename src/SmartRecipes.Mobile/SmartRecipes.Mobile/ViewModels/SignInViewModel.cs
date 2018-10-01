@@ -1,6 +1,7 @@
 ﻿using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
+using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 
 namespace SmartRecipes.Mobile.ViewModels
@@ -31,22 +32,25 @@ namespace SmartRecipes.Mobile.ViewModels
             get { return Email.IsValid && Password.IsValid; }
         }
 
-        public async Task<bool> SignIn()
+        // TODO: refactor bool/Usermessages to by IOption<UserMessage> ?
+        public Task<bool> SignIn()
         {
             if (FormIsValid)
             {
                 var credentials = new SignInCredentials(Email.Data, Password.Data);
-                var authResult = await UserHandler.SignIn(credentials)(enviroment);
-
-                if (authResult.IsFirst)
-                {
-                    await enviroment.Db.Seed();
-                    await Navigation.LogIn();
-                    return true;
-                }
+                var authResult = UserHandler.SignIn(credentials).Execute(enviroment);
+                return authResult.Bind(r => r.Match(
+                    a =>
+                    {
+                        return enviroment.Db.Seed()
+                            .Bind(_ => Navigation.LogIn())
+                            .Map(_ => true);
+                    },
+                    e => Task.FromResult(false)
+                ));
             }
             
-            return false;
+            return Task.FromResult(false);
         }
 
         public async Task SignUp()

@@ -18,6 +18,11 @@ namespace SmartRecipes.Mobile.Extensions
             return propertyPathName;
         }
         
+        public static A Execute<E, A>(this Reader<E, A> reader, E env)
+        {
+            return reader(env);
+        }
+        
         public static Reader<E, B> Bind<E, A, B>(this Reader<E, A> reader, Func<A, Reader<E, B>> binder)
         {
             return reader.SelectMany(binder, (a, b) => b);
@@ -44,6 +49,10 @@ namespace SmartRecipes.Mobile.Extensions
         public static Reader<E, Task<B>> Select<E, A, B>(this Reader<E, Task<A>> reader, Func<A, B> selector)
         {
             return env => reader(env).Map(r => selector(r));
+        }
+        public static Reader<E, Task<B>> Map<E, A, B>(this Reader<E, Task<A>> reader, Func<A, B> project)
+        {
+            return reader.Select(project);
         }
 
         public static Task<IOption<UserMessage>> MapToUserMessageAsync<A>(this ITry<Task<A>> aTry, Func<A, IOption<UserMessage>> mapper)

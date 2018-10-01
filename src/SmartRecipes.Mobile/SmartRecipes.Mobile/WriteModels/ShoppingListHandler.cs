@@ -107,7 +107,7 @@ namespace SmartRecipes.Mobile.WriteModels
             foreach (var itemAmount in itemAmounts)
             {
                 var request = new ChangeFoodstuffAmountRequest(itemAmount.FoodstuffId, itemAmount.Amount);
-                var response = await ApiClient.Post(request)(enviroment.HttpClient);
+                var response = await ApiClient.Post(request)(enviroment);
             }
 
             await enviroment.Db.UpdateAsync((IEnumerable<IShoppingListItemAmount>) itemAmounts);
