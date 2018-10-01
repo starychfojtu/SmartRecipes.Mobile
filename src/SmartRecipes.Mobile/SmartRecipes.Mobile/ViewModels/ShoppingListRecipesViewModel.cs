@@ -5,7 +5,7 @@ using SmartRecipes.Mobile.ReadModels.Dto;
 using System.Linq;
 using SmartRecipes.Mobile.Models;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.WriteModels;
@@ -35,13 +35,13 @@ namespace SmartRecipes.Mobile.ViewModels
             UpdateRecipeItems(await ShoppingListRepository.GetRecipeItems(CurrentAccount)(enviroment));
         }
         
-        private Task<Option<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Enviroment, ShoppingListRecipeItem, TryAsync<Unit>> action)
+        private IOption<UserMessage> RecipeDeleteAction(IRecipe recipe, Func<Enviroment, ShoppingListRecipeItem, ITry<Unit>> action)
         {
             var item = recipeItems.First(r => r.Detail.Recipe.Equals(recipe));
             return action(enviroment, item).MapToUserMessage(_ =>
             {
                 UpdateRecipeItems(recipeItems.Remove(item));
-                return UserMessage.Deleted();
+                return UserMessage.Deleted().ToOption();
             });
         }
 
@@ -55,7 +55,7 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             return new RecipeCellViewModel(
                 item.Detail,
-                item.RecipeInShoppingList.PersonCount,
+                item.RecipeInShoppingList.PersonCount.ToOption(),
                 new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.Cook(da, i)), Icon.Done(), 1),
                 new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.RemoveFromShoppingList(da, i.RecipeInShoppingList)), Icon.CartRemove(), 2)
             );

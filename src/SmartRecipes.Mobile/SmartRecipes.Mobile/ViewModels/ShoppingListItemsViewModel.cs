@@ -6,11 +6,10 @@ using System;
 using SmartRecipes.Mobile.WriteModels;
 using SmartRecipes.Mobile.ReadModels.Dto;
 using System.Collections.Immutable;
+using FuncSharp;
 using SmartRecipes.Mobile.Models;
-using LanguageExt;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
-using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -64,12 +63,12 @@ namespace SmartRecipes.Mobile.ViewModels
             UpdateShoppingListItems(newShoppingListItems);
         }
         
-        private Task<Option<UserMessage>> DeleteItem(ShoppingListItem item)
+        private Task<IOption<UserMessage>> DeleteItem(ShoppingListItem item)
         {
             return ShoppingListHandler.RemoveFromShoppingList(enviroment, item, CurrentAccount).MapToUserMessage(_ =>
             {
                 UpdateShoppingListItems(shoppingListItems.Remove(item));
-                return None;
+                return Option.Empty<UserMessage>();
             });
         }
 
@@ -77,7 +76,7 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             shoppingListItems = newShoppingListItems.OrderBy(i => i.Foodstuff.Name).ToImmutableList();
             RaisePropertyChanged(nameof(ShoppingListItems));
-            return Unit.Default;
+            return Unit.Value;
         }
 
         private FoodstuffAmountCellViewModel ToViewModel(ShoppingListItem item)
@@ -85,7 +84,7 @@ namespace SmartRecipes.Mobile.ViewModels
             return new FoodstuffAmountCellViewModel(
                 item.Foodstuff,
                 item.Amount,
-                requiredAmounts.TryGetValue(item.Foodstuff),
+                requiredAmounts.Get(item.Foodstuff),
                 () => ShoppingListItemAction(item, i => ShoppingListHandler.Increase(i)),
                 () => ShoppingListItemAction(item, i => ShoppingListHandler.Decrease(i)),
                 new UserAction<Unit>(_ => DeleteItem(item), Icon.Delete(), 1)

@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.ReadModels;
 using SmartRecipes.Mobile.WriteModels;
 using SmartRecipes.Mobile.Models;
-using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -37,7 +36,7 @@ namespace SmartRecipes.Mobile.ViewModels
             var recipeDetails = await RecipeRepository.GetMyRecipeDetails()(enviroment);
             Recipes = recipeDetails.Select(detail => new RecipeCellViewModel(
                 detail,
-                None,
+                Option.Empty<int>(),
                 new UserAction<IRecipe>(r => AddToShoppingList(r), Icon.CartAdd(), 1),
                 new UserAction<IRecipe>(r => EditRecipe(r), Icon.Edit(), 2),
                 new UserAction<IRecipe>(r => DeleteRecipe(r), Icon.Delete(), 3)
@@ -45,21 +44,21 @@ namespace SmartRecipes.Mobile.ViewModels
             RaisePropertyChanged(nameof(Recipes));
         }
 
-        public async Task<Option<UserMessage>> EditRecipe(IRecipe recipe)
+        public async Task<IOption<UserMessage>> EditRecipe(IRecipe recipe)
         {
             var detail = await RecipeRepository.GetDetail(recipe)(enviroment);
             await Navigation.EditRecipe(detail);
-            return None;
+            return Option.Empty<UserMessage>();
         }
 
-        public Task<Option<UserMessage>> DeleteRecipe(IRecipe recipe)
+        public Task<IOption<UserMessage>> DeleteRecipe(IRecipe recipe)
         {
             return MyRecipesHandler.Delete(enviroment, recipe)
-                .Bind(_ => TryAsync(() => InitializeAsync().ContinueWith(r => Unit.Default)))
+                .Bind(u => Try.Create(_ => InitializeAsync().ToUnit()))
                 .MapToUserMessage(_ => UserMessage.Deleted());
         }
 
-        private Task<Option<UserMessage>> AddToShoppingList(IRecipe recipe)
+        private Task<IOption<UserMessage>> AddToShoppingList(IRecipe recipe)
         {
             return ShoppingListHandler
                 .AddToShoppingList(enviroment, recipe, CurrentAccount, recipe.PersonCount)

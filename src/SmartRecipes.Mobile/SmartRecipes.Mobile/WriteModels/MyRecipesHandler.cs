@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using SmartRecipes.Mobile.Models;
 using System.Collections.Generic;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
-using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.WriteModels
 {
@@ -23,9 +22,9 @@ namespace SmartRecipes.Mobile.WriteModels
                 .Bind(_ => enviroment.Db.AddAsync(ingredients));
         }
         
-        public static TryAsync<Unit> Delete(Enviroment enviroment, IRecipe recipe)
+        public static ITry<Task<Unit>> Delete(Enviroment enviroment, IRecipe recipe)
         {
-            return TryAsync(() =>
+            return Try.Create(unit =>
             {
                 var recipeInShoppingList = enviroment.Db.GetTableMapping<RecipeInShoppingList>();
                 var recipeInShoppingListRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(RecipeInShoppingList.RecipeId));

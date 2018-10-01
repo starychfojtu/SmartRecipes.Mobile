@@ -25,7 +25,7 @@ namespace SmartRecipes.Mobile.Pages
             viewModel.BindValue(IngredientsListView, ItemsView<Cell>.ItemsSourceProperty, vm => vm.IngredientViewModels);
 
             AddIngredientButton.Clicked += async (s, e) => await viewModel.OpenAddIngredientDialog();
-            SubmitButton.Clicked += async (s, e) => await UserMessage.PopupAction(() => viewModel.Submit());
+            SubmitButton.Clicked += async (s, e) => await UserMessage.PopupAction(_ => viewModel.Submit());
         }
     }
 }

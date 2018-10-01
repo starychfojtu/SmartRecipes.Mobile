@@ -14,7 +14,7 @@ namespace SmartRecipes.Mobile.ReadModels
         public static Monad.Reader<Enviroment, Task<IEnumerable<IFoodstuff>>> Search(string query)
         {
             return Repository.RetrievalAction(
-                _ => ApiClient.Get(new SearchFoodstuffRequest(query)),
+                ApiClient.Get(new SearchFoodstuffRequest(query)),
                 SearchDb(query),
                 response => ToFoodstuffs(response),
                 foodstuffs => foodstuffs

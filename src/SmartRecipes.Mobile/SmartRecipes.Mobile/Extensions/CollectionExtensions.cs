@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace SmartRecipes.Mobile.Extensions
 {
@@ -16,7 +17,7 @@ namespace SmartRecipes.Mobile.Extensions
             ImmutableDictionary<A, B> second,
             Func<B, B, B> resolve)
         {
-            return second.Fold(first, (fst, kvp) => fst.SetItem(
+            return second.Aggregate(first, (fst, kvp) => fst.SetItem(
                 kvp.Key, 
                 fst.ContainsKey(kvp.Key) ? resolve(fst[kvp.Key], kvp.Value) : kvp.Value
             ));

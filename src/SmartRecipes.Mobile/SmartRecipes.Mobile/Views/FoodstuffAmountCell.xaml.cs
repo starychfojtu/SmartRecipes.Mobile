@@ -2,7 +2,7 @@
 using Xamarin.Forms;
 using SmartRecipes.Mobile.ViewModels;
 using FFImageLoading.Transformations;
-using SmartRecipes.Mobile.Infrastructure;
+using Xamarin.Forms.Internals;
 
 namespace SmartRecipes.Mobile.Views
 {
@@ -29,7 +29,7 @@ namespace SmartRecipes.Mobile.Views
             {
                 var amountText = ViewModel.RequiredAmount.Match(
                     a => $"{ViewModel.Amount.Count} / {a.Count} {a.Unit.ToString()}",
-                    () => ViewModel.Amount.ToString()
+                    _ => ViewModel.Amount.ToString()
                 );
 
                 NameLabel.Text = ViewModel.Foodstuff.Name;
@@ -39,7 +39,7 @@ namespace SmartRecipes.Mobile.Views
                 
                 var actions = ViewModel.MenuActions.Select(a => Controls.Controls.MenuItem(a));
                 ContextActions.Clear();
-                actions.Iter(a => ContextActions.Add(a));
+                actions.ForEach(a => ContextActions.Add(a));
             }
         }
         

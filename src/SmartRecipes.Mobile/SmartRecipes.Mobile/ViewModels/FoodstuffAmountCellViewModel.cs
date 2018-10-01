@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
 
@@ -11,7 +11,7 @@ namespace SmartRecipes.Mobile.ViewModels
         public FoodstuffAmountCellViewModel(
             IFoodstuff foodstuff,
             IAmount amount,
-            Option<IAmount> requiredAmount,
+            IOption<IAmount> requiredAmount,
             Func<Task> onPlus,
             Func<Task> onMinus,
             params UserAction<Unit>[] menuActions)
@@ -28,7 +28,7 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public IAmount Amount { get; }
 
-        public Option<IAmount> RequiredAmount { get; }
+        public IOption<IAmount> RequiredAmount { get; }
 
         public Func<Task> OnPlus { get; }
 

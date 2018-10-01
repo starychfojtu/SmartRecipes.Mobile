@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SQLite;
 
 namespace SmartRecipes.Mobile.Extensions
@@ -21,10 +21,10 @@ namespace SmartRecipes.Mobile.Extensions
             return tableQuery.ToEnumerableAsync().Map(t => t.Select(i => i as U));
         }
 
-        public static Task<Option<T>> FirstOptionAsync<T>(this AsyncTableQuery<T> tableQuery)
+        public static Task<IOption<T>> FirstOption<T>(this AsyncTableQuery<T> tableQuery)
             where T : new()
         {
-            return tableQuery.FirstOrDefaultAsync().Map(t => Prelude.Optional(t));
+            return tableQuery.FirstOrDefaultAsync().Map(t => t.ToOption());
         }
     }
 }

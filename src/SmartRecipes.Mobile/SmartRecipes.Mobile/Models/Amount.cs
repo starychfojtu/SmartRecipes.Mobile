@@ -1,6 +1,5 @@
 ﻿using System;
-using LanguageExt;
-using static LanguageExt.Prelude;
+using FuncSharp;
 
 namespace SmartRecipes.Mobile.Models
 {
@@ -26,9 +25,6 @@ namespace SmartRecipes.Mobile.Models
             return $"{Count} {Unit.ToString()}";
         }
 
-        // Combinators
-        // TODO: make monoid
-
         public static IAmount Zero(AmountUnit unit)
         {
             return new Amount(0, unit);
@@ -49,22 +45,23 @@ namespace SmartRecipes.Mobile.Models
             return IsLessThan(a1, a2) || Equals(a1, a2);
         }
 
-        public static Option<IAmount> Add(IAmount a1, IAmount a2)
+        public static IOption<IAmount> Add(IAmount a1, IAmount a2)
         {
             return CountOperation((c1, c2) => c1 + c2, a1, a2);
         }
 
-        public static Option<IAmount> Substract(IAmount a1, IAmount a2)
+        public static IOption<IAmount> Substract(IAmount a1, IAmount a2)
         {
             return CountOperation((c1, c2) => c1 - c2, a1, a2);
         }
 
-        private static Option<IAmount> CountOperation(Func<int, int, int> op, IAmount first, IAmount second)
+        private static IOption<IAmount> CountOperation(Func<int, int, int> op, IAmount first, IAmount second)
         {
             var validOperation = first.Unit == second.Unit;
-            return validOperation
-                ? Some((IAmount)new Amount(op(first.Count, second.Count), first.Unit))
-                : None;
+            var amount = validOperation
+                ? new Amount(op(first.Count, second.Count), first.Unit).ToOption()
+                : Option.Empty<Amount>();
+            return amount.Map(a => a as IAmount);
         }
     }
 }

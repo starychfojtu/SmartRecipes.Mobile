@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
+using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using Xamarin.Forms;
-using static LanguageExt.Prelude;
 using Validation = SmartRecipes.Mobile.Infrastructure.Validation;
 
 namespace SmartRecipes.Mobile.ViewModels
@@ -54,43 +54,42 @@ namespace SmartRecipes.Mobile.ViewModels
             UpdateIngredients(newIngredients);
         }
 
-        public async Task<Option<UserMessage>> Submit()
+        public Task<IOption<UserMessage>> Submit()
         {
             if (!Recipe.IsValid)
             {
-                return UserMessage.Error("Cannot submit, some of the fields are invalid.");
+                return Task.FromResult(UserMessage.Error("Cannot submit, some of the fields are invalid.").ToOption());
             }
 
-            var getIngredients = fun((IRecipe r) => Ingredients.Select(kvp => IngredientAmount.Create(r, kvp.Key, kvp.Value)));
             var submitTask = Mode == EditRecipeMode.New
-                ? CreateRecipe(getIngredients)
-                : UpdateRecipe(getIngredients);
+                ? CreateRecipe(r => Ingredients.Select(kvp => IngredientAmount.Create(r, kvp.Key, kvp.Value)))
+                : UpdateRecipe(r => Ingredients.Select(kvp => IngredientAmount.Create(r, kvp.Key, kvp.Value)));
 
-            await submitTask;
-            await Application.Current.MainPage.Navigation.PopAsync();
-            return None;
+            return submitTask
+                .Bind(_ => Application.Current.MainPage.Navigation.PopAsync())
+                .Map(_ => Option.Empty<UserMessage>());
         }
 
-        public async Task CreateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
+        public Task<Unit> CreateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
         {
             var recipe = Models.Recipe.Create(
                 CurrentAccount,
                 Recipe.Name.Data,
-                Optional(Recipe.ImageUrl).Map(url => new Uri(url)),
+                Recipe.ImageUrl.ToOption().Map(url => new Uri(url)),
                 Recipe.PersonCount.Data,
                 Recipe.Text
             );
 
-            await MyRecipesHandler.Add(enviroment, recipe, getIngredients(recipe));
+            return MyRecipesHandler.Add(enviroment, recipe, getIngredients(recipe));
         }
 
-        public async Task UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
+        public async Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
         {
             var recipe = Models.Recipe.Create(
                 Recipe.Id.Value,
                 CurrentAccount.Id,
                 Recipe.Name.Data,
-                Optional(Recipe.ImageUrl).Map(url => new Uri(url)),
+                new Uri(Recipe.ImageUrl),
                 Recipe.PersonCount.Data,
                 Recipe.Text
             );
@@ -98,17 +97,18 @@ namespace SmartRecipes.Mobile.ViewModels
             await MyRecipesHandler.Update(enviroment, recipe, getIngredients(recipe));
         }
 
-        private Task<Unit> ChangeAmount(IFoodstuff foodstuff, Func<IAmount, IAmount, Option<IAmount>> action)
+        private Task<Unit> ChangeAmount(IFoodstuff foodstuff, Func<IAmount, IAmount, IOption<IAmount>> action)
         {
-            var newAmount = action(Ingredients[foodstuff], foodstuff.AmountStep).IfNone(foodstuff.BaseAmount);
+            var newAmount = action(Ingredients[foodstuff], foodstuff.AmountStep).GetOrElse(foodstuff.BaseAmount);
             var newIngredients = Ingredients.SetItem(foodstuff, newAmount);
 
             return Task.FromResult(UpdateIngredients(newIngredients));
         }
 
-        private Task<Option<UserMessage>> DeleteIngredient(IFoodstuff foodstuff)
+        private Task<IOption<UserMessage>> DeleteIngredient(IFoodstuff foodstuff)
         {
-            return Task.FromResult(UpdateIngredients(Ingredients.Remove(foodstuff))).Map(_ => Option<UserMessage>.None);
+            UpdateIngredients(Ingredients.Remove(foodstuff));
+            return Task.FromResult(Option.Empty<UserMessage>());
         }
 
         private Unit UpdateIngredients(IImmutableDictionary<IFoodstuff, IAmount> newIngredients)
@@ -116,7 +116,7 @@ namespace SmartRecipes.Mobile.ViewModels
             Ingredients = newIngredients;
             RaisePropertyChanged(nameof(Ingredients));
             RaisePropertyChanged(nameof(IngredientViewModels));
-            return Unit.Default;
+            return Unit.Value;
         }
 
         private FoodstuffAmountCellViewModel ToViewModel(IFoodstuff foodstuff, IAmount amount)
@@ -124,7 +124,7 @@ namespace SmartRecipes.Mobile.ViewModels
             return new FoodstuffAmountCellViewModel(
                 foodstuff,
                 amount,
-                None,
+                Option.Empty<IAmount>(),
                 () => ChangeAmount(foodstuff, (a1, a2) => Amount.Add(a1, a2)),
                 () => ChangeAmount(foodstuff, (a1, a2) => Amount.Substract(a1, a2)),
                 new UserAction<Unit>(_ => DeleteIngredient(foodstuff), Icon.Delete(), 1)

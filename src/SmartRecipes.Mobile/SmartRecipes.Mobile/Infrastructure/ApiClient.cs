@@ -3,37 +3,37 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using LanguageExt;
 using SmartRecipes.Mobile.ApiDto;
-using static LanguageExt.Prelude;
+using SmartRecipes.Mobile.Extensions;
+using static SmartRecipes.Mobile.Infrastructure.ApiResult;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {   
     public static class ApiClient
     {
-        public static Monad.Reader<HttpClient, Task<Either<SignInResponse, ApiError>>> Post(SignInRequest request)
+        public static Monad.Reader<HttpClient, Task<ApiResult<SignInResponse>>> Post(SignInRequest request)
         {
             return Post<SignInRequest, SignInResponse>(request, "/signIn");
         }
         
-        public static Monad.Reader<HttpClient, Task<Either<SignUpResponse, ApiError>>> Post(SignUpRequest request)
+        public static Monad.Reader<HttpClient, Task<ApiResult<SignUpResponse>>> Post(SignUpRequest request)
         {
             return Post<SignUpRequest, SignUpResponse>(request, "/signUp");
         }
         
-        public static Monad.Reader<HttpClient, Task<Either<ChangeFoodstuffAmountResponse, ApiError>>> Post(ChangeFoodstuffAmountRequest request)
+        public static Monad.Reader<HttpClient, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(ChangeFoodstuffAmountRequest request)
         {
             return Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/signIn");
         }
         
-        private static Monad.Reader<HttpClient, Task<Either<TResponse, ApiError>>> Post<TRequest, TResponse>(TRequest request, string route)
+        private static Monad.Reader<HttpClient, Task<ApiResult<TResponse>>> Post<TRequest, TResponse>(TRequest request, string route)
         {
             return client =>
             {
                 var json = JsonConvert.SerializeObject(request);
                 var content = new StringContent(json.ToString(), Encoding.UTF8, "application/json");
                 var response = client.PostAsync(route, content);
-                return response.Bind(r => 
+                return response.Bind(r =>
                     r.IsSuccessStatusCode 
                         ? r.Content.ReadAsStringAsync().Map(c => Success(JsonConvert.DeserializeObject<TResponse>(c))) 
                         : Task.FromResult(Error<TResponse>(new ApiError(r.Content.ToString(), r.StatusCode)))
@@ -41,29 +41,19 @@ namespace SmartRecipes.Mobile.Infrastructure
             };
         }
         
-        public static Monad.Reader<HttpClient, Task<Either<SearchFoodstuffResponse, ApiError>>> Get(SearchFoodstuffRequest request)
+        public static Monad.Reader<HttpClient, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request)
         {
             return Post<SearchFoodstuffRequest, SearchFoodstuffResponse>(request, "/foodstuffs/");
         }
 
-        public static Monad.Reader<HttpClient, Task<Either<ShoppingListResponse, ApiError>>> GetShoppingList()
+        public static Monad.Reader<HttpClient, Task<ApiResult<ShoppingListResponse>>> GetShoppingList()
         {
             throw new NotImplementedException();
         }
 
-        public static Monad.Reader<HttpClient, Task<Option<MyRecipesResponse>>> GetMyRecipes()
+        public static Monad.Reader<HttpClient, Task<ApiResult<MyRecipesResponse>>> GetMyRecipes()
         {
             throw new NotImplementedException();
-        }
-        
-        private static Either<T, ApiError> Success<T>(T value)
-        {
-            return Left(value);
-        }
-        
-        private static Either<T, ApiError> Error<T>(ApiError error)
-        {
-            return Right(error);
         }
     }
 }

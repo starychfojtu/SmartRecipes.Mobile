@@ -1,5 +1,5 @@
 ﻿using System;
-using LanguageExt;
+using FuncSharp;
 using SQLite;
 
 namespace SmartRecipes.Mobile.Models
@@ -8,13 +8,13 @@ namespace SmartRecipes.Mobile.Models
     {
         private const string DefaultImageUrl = "https://cdn1.iconfinder.com/data/icons/food-solid-icons-volume-4-1/128/171-512.png";
 
-        private Recipe(Guid id, Guid ownerId, string name, Uri imageUrl, int personCount, Option<string> text) : base(id)
+        private Recipe(Guid id, Guid ownerId, string name, Uri imageUrl, int personCount, string text) : base(id)
         {
             Name = name;
             ImageUrl = imageUrl;
             OwnerId = ownerId;
             PersonCount = personCount;
-            Text = text.IfNone(() => null);
+            Text = text;
         }
 
         public Recipe() : base(Guid.Empty) { /* for sqllite */ }
@@ -36,15 +36,15 @@ namespace SmartRecipes.Mobile.Models
         public string Text { get; set; }
 
         // Combinators
-
-        public static IRecipe Create(IAccount owner, string name, Option<Uri> imageUrl, int personCount, string text)
+        
+        public static Recipe Create(Guid id, Guid ownerId, string name, Uri imageUrl, int personCount, string text)
         {
-            return new Recipe(Guid.NewGuid(), owner.Id, name, imageUrl.IfNone(() => new Uri(DefaultImageUrl)), personCount, text);
+            return new Recipe(id, ownerId, name, imageUrl, personCount, text);
         }
-
-        public static Recipe Create(Guid id, Guid ownerId, string name, Option<Uri> imageUrl, int personCount, string text)
+        
+        public static IRecipe Create(IAccount owner, string name, IOption<Uri> imageUrl, int personCount, string text)
         {
-            return new Recipe(id, ownerId, name, imageUrl.IfNone(() => new Uri(DefaultImageUrl)), personCount, text);
+            return Create(Guid.NewGuid(), owner.Id, name, imageUrl.GetOrElse(new Uri(DefaultImageUrl)), personCount, text);
         }
     }
 }

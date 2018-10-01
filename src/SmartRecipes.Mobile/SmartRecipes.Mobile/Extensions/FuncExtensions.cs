@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
-using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.Extensions
 {
@@ -12,11 +10,6 @@ namespace SmartRecipes.Mobile.Extensions
     {
         public static string ToPropertyPathName<T, TProperty>(this Expression<Func<T, TProperty>> memberExpression)
         {
-            // TODO: check performance of this
-            //var expression = memberExpression.Body as MemberExpression;
-            //var member = expression.Member as PropertyInfo;
-            //return member.Name;
-
             var expressions = memberExpression.ToString();
             var indexOfFirstDot = expressions.IndexOf('.');
             var propertyPathName = expressions.Substring(indexOfFirstDot + 1);
@@ -46,14 +39,9 @@ namespace SmartRecipes.Mobile.Extensions
             return env => reader(env).Map(r => selector(r));
         }
 
-        public static Task<Option<UserMessage>> MapToUserMessage<A>(this TryAsync<A> tryAsync, Func<A, Option<UserMessage>> mapper)
+        public static IOption<UserMessage> MapToUserMessage<A>(this ITry<A> aTry, Func<A, IOption<UserMessage>> mapper)
         {
-            return tryAsync.Match(r => mapper(r), e => Some(UserMessage.Error(e)));
-        }
-        
-        public static Task<Unit> ToUnitTask<A>(this Task<A> task)
-        {
-            return task.Map(_ => Unit.Default);
+            return aTry.Match(r => mapper(r), e => Option.Create(UserMessage.Error(e)));
         }
     }
 }

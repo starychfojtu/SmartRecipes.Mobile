@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
+using SmartRecipes.Mobile.Extensions;
 using Xamarin.Forms;
 
 namespace SmartRecipes.Mobile.Infrastructure
@@ -17,12 +20,13 @@ namespace SmartRecipes.Mobile.Infrastructure
         
         public string Text { get; }
 
-        public static async Task PopupAction(Func<Task<Option<UserMessage>>> action)
+        public static Task PopupAction(Func<Unit, Task<IOption<UserMessage>>> action)
         {
-            var result = await action();
-            await result
-                .MapAsync(r => Application.Current.MainPage.DisplayAlert(r.Title, r.Text, "Ok"))
-                .IfNone(Task.CompletedTask);
+            return action(Unit.Value).Bind(message => 
+                message
+                    .Map(r => Application.Current.MainPage.DisplayAlert(r.Title, r.Text, "Ok").ToUnit())
+                    .GetOrElse(Tasks.Unit())
+            );
         }
         
         public static UserMessage Error(string s)
@@ -30,9 +34,9 @@ namespace SmartRecipes.Mobile.Infrastructure
             return new UserMessage("Error", s);
         }
         
-        public static UserMessage Error(Exception e)
+        public static UserMessage Error(IEnumerable<Exception> errors)
         {
-            return Error(e.Message);
+            return Error(errors.Select(e => e.Message).Aggregate((s1, s2) => $"{s1}{Environment.NewLine}{s2}"));
         }
 
         public static UserMessage Deleted()

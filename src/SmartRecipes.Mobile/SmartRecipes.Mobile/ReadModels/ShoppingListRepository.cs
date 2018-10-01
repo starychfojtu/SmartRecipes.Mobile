@@ -6,6 +6,7 @@ using SmartRecipes.Mobile.ApiDto;
 using SmartRecipes.Mobile.ReadModels.Dto;
 using SmartRecipes.Mobile.Models;
 using System.Collections.Immutable;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 
@@ -15,13 +16,12 @@ namespace SmartRecipes.Mobile.ReadModels
     {
         public static Monad.Reader<Enviroment, Task<IEnumerable<ShoppingListItem>>> GetItems(Guid ownerId)
         {
-            throw new NotImplementedException();
-//            return Repository.RetrievalAction(
-//                client => client.GetShoppingList(),
-//                GetShoppingListItems(),
-//                response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
-//                items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
-//            );
+            return Repository.RetrievalAction(
+                ApiClient.GetShoppingList(),
+                GetShoppingListItems(),
+                response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
+                items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
+            );
         }
 
         public static Monad.Reader<Enviroment, Task<IEnumerable<ShoppingListRecipeItem>>> GetRecipeItems(IAccount owner)
@@ -35,21 +35,21 @@ namespace SmartRecipes.Mobile.ReadModels
 
         public static Monad.Reader<Enviroment, Task<ImmutableDictionary<IFoodstuff, IAmount>>> GetRequiredAmounts(IAccount owner)
         {
-            return GetRecipeItems(owner).Select(rs => rs.Fold(
+            return GetRecipeItems(owner).Select(rs => rs.Aggregate(
                 ImmutableDictionary.Create<IFoodstuff, IAmount>(),
-                (r, item) => r.Merge(GetRequiredAmounts(item), (a1, a2) => Amount.Add(a1, a2).IfNone(a2))
+                (r, item) => r.Merge(GetRequiredAmounts(item), (a1, a2) => Amount.Add(a1, a2).GetOrElse(a2))
             ));
         }
         
         public static ImmutableDictionary<IFoodstuff, IAmount> GetRequiredAmounts(ShoppingListRecipeItem item)
         {
             var result = ImmutableDictionary.Create<IFoodstuff, IAmount>();
-            return item.Detail.Ingredients.Fold(result, (tempResult, i) =>
+            return item.Detail.Ingredients.Aggregate(result, (tempResult, i) =>
             {
                 var personCountRatio = item.RecipeInShoppingList.PersonCount / item.Detail.Recipe.PersonCount;
                 var newAmount = i.Amount.WithCount(i.Amount.Count * personCountRatio); 
                 var totalAmount = tempResult.ContainsKey(i.Foodstuff)
-                    ? Amount.Add(tempResult[i.Foodstuff], newAmount).IfNone(newAmount)
+                    ? Amount.Add(tempResult[i.Foodstuff], newAmount).GetOrElse(newAmount)
                     : newAmount;
                 return tempResult.SetItem(i.Foodstuff, totalAmount);
             });

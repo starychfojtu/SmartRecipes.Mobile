@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using LanguageExt;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Models;
 using SQLite;
@@ -8,7 +8,7 @@ using Xamarin.Forms;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
-    public class Database
+    public sealed class Database
     {
         private const string FileName = "SmartRecies.db";
 
@@ -16,27 +16,27 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public Task<Unit> AddAsync<T>(IEnumerable<T> items)
         {
-            return Connection.InsertAllAsync(items).ToUnitTask();
+            return Connection.InsertAllAsync(items).ToUnit();
         }
 
         public Task<Unit> UpdateAsync<T>(IEnumerable<T> items)
         {
-            return Connection.UpdateAllAsync(items).ToUnitTask();
+            return Connection.UpdateAllAsync(items).ToUnit();
         }
 
         public Task<Unit> UpdateAsync<T>(T item)
         {
-            return Connection.UpdateAsync(item).ToUnitTask();
+            return Connection.UpdateAsync(item).ToUnit();
         }
 
         public Task<Unit> AddOrReplaceAsync<T>(T item)
         {
-            return Connection.InsertOrReplaceAsync(item).ToUnitTask();
+            return Connection.InsertOrReplaceAsync(item).ToUnit();
         }
 
         public Task<Unit> Delete<T>(T item)
         {
-            return Connection.DeleteAsync(item).ToUnitTask();
+            return Connection.DeleteAsync(item).ToUnit();
         }
 
         public Task<IEnumerable<T>> Query<T>(string sql, params object[] args)
@@ -47,7 +47,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public Task<Unit> Execute(string sql, params object[] args)
         {
-            return connection.QueryAsync<int>(sql, args).ToUnitTask();
+            return connection.QueryAsync<int>(sql, args).ToUnit();
         }
 
         public TableMapping GetTableMapping<T>()
@@ -82,8 +82,8 @@ namespace SmartRecipes.Mobile.Infrastructure
         
         public Task<Unit> Seed()
         {
-            var foodstuffs = Foodstuffs.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeFoodstuffs()) : Task.FromResult(Unit.Default));
-            var recipes = Recipes.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeRecipes()) : Task.FromResult(Unit.Default));
+            var foodstuffs = Foodstuffs.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeFoodstuffs()) : Tasks.Unit());
+            var recipes = Recipes.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeRecipes()) : Tasks.Unit());
 
             return foodstuffs.Bind(_ => recipes);
         }

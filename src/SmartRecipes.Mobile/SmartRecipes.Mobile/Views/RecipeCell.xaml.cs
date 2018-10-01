@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using FFImageLoading.Forms;
+﻿using System.Linq;
 using FFImageLoading.Transformations;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
@@ -31,7 +29,7 @@ namespace SmartRecipes.Mobile.Views
                 var newActionButtons = ViewModel.Actions.OrderBy(a => a.Order).Select(a =>
                 {
                     return Controls.Controls.ActionButton(a.Icon).Tee(b => 
-                        b.Clicked += async (s, e) => await UserMessage.PopupAction(() => a.Action(recipe))
+                        b.Clicked += async (s, e) => await UserMessage.PopupAction(_ => a.Action(recipe))
                     );
                 });
                 

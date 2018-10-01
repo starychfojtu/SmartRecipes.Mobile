@@ -1,31 +1,32 @@
 ﻿using SmartRecipes.Mobile.ApiDto;
 using System.Threading.Tasks;
 using System;
-using LanguageExt;
 using SmartRecipes.Mobile.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Immutable;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.ReadModels;
 using SmartRecipes.Mobile.ReadModels.Dto;
-using static LanguageExt.Prelude;
 
 namespace SmartRecipes.Mobile.WriteModels
 {
     public static class ShoppingListHandler
     {
-        public static TryAsync<Unit> AddToShoppingList(Enviroment enviroment, IRecipe recipe, IAccount owner, int personCount)
+        public static Monad.Reader<Enviroment, ITry<Task<Unit>>> AddToShoppingList(IRecipe recipe, IAccount owner, int personCount)
         {
-            return TryAsync(async () => await ShoppingListRepository
-                .GetRecipeItems(owner)
-                .Select(items => items.Find(i => i.Detail.Recipe.Equals(recipe)))(enviroment)
-                .MatchAsync(
-                    i => AddPersonCount(enviroment, i.RecipeInShoppingList, personCount),
-                    () => CreateRecipeInShoppingList(enviroment, recipe, owner, personCount)
-                )
-            );
+            return env => Try.Create(unit =>
+            {
+                var a = ShoppingListRepository
+                    .GetRecipeItems(owner)
+                    .Select(items => items.FirstOption(i => i.Detail.Recipe.Equals(recipe)))
+                    .Bind(item => item.Match(
+                        i => AddPersonCount(i.RecipeInShoppingList, personCount),
+                        () => CreateRecipeInShoppingList(recipe, owner, personCount)
+                    ));
+            });
         }
         
         public static IShoppingListItemAmount Increase(ShoppingListItem item)
@@ -38,10 +39,10 @@ namespace SmartRecipes.Mobile.WriteModels
             return ChangeAmount((a1, a2) => Amount.Substract(a1, a2), item);
         }
 
-        public static TryAsync<Unit> Cook(Enviroment enviroment, ShoppingListRecipeItem recipeItem)
+        public static ITry<Task<Unit>> Cook(Enviroment enviroment, ShoppingListRecipeItem recipeItem)
         {
             // TODO: refactor, consider using linq
-            return TryAsync(() =>
+            return Try.Create(_ =>
             {
                 var ownerId = recipeItem.RecipeInShoppingList.ShoppingListOwnerId;
                 var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(recipeItem);
@@ -123,19 +124,19 @@ namespace SmartRecipes.Mobile.WriteModels
             return item.ItemAmount.WithAmount(newAmount);
         }
         
-        private static async Task<Unit> CreateRecipeInShoppingList(Enviroment enviroment, IRecipe recipe, IAccount owner, int personCount)
+        private static Monad.Reader<Enviroment, Task<Unit>> CreateRecipeInShoppingList(IRecipe recipe, IAccount owner, int personCount)
         {
             var newItemAmounts = await GetRecipeComplementOfShoppingList(recipe, owner)(enviroment);
 
             await enviroment.Db.AddAsync(RecipeInShoppingList.Create(recipe, owner, personCount).ToEnumerable());
             await enviroment.Db.AddAsync(newItemAmounts);
 
-            return Unit.Default;
+            return Unit.Value;
         }
 
-        private static Task<Unit> AddPersonCount(Enviroment enviroment, IRecipeInShoppingList recipe, int personCount)
+        private static Monad.Reader<Enviroment, Task<Unit>> AddPersonCount(IRecipeInShoppingList recipe, int personCount)
         {
-            return enviroment.Db.UpdateAsync(recipe.AddPersons(personCount));
+            return env => env.Db.UpdateAsync(recipe.AddPersons(personCount));
         }
 
         private static Monad.Reader<Enviroment, Task<IEnumerable<IShoppingListItemAmount>>> GetRecipeComplementOfShoppingList(IRecipe recipe, IAccount owner)

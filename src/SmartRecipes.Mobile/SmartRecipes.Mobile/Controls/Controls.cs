@@ -1,4 +1,4 @@
-﻿using LanguageExt;
+﻿using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using Xamarin.Forms;
@@ -27,7 +27,7 @@ namespace SmartRecipes.Mobile.Controls
                 IsDestructive = destructive,
                 Icon = action.Icon.ImageName
             }; 
-            return item.Tee(i => i.Clicked += async (sender, e) => await UserMessage.PopupAction(() => action.Action(Unit.Default)));
+            return item.Tee(i => i.Clicked += async (sender, e) => await UserMessage.PopupAction(() => action.Action(Unit.Value)));
         }
     }
 }

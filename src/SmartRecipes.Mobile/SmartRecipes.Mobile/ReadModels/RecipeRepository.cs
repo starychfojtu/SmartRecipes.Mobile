@@ -5,6 +5,7 @@ using SmartRecipes.Mobile.ApiDto;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.ReadModels.Dto;
 using System;
+using Monad;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 
@@ -14,13 +15,12 @@ namespace SmartRecipes.Mobile.ReadModels
     {
         public static Monad.Reader<Enviroment, Task<IEnumerable<IRecipe>>> GetMyRecipes()
         {
-            throw new NotImplementedException();
-//            return Repository.RetrievalAction(
-//                _ => ApiClient.GetMyRecipes(),
-//                env => env.Db.Recipes.ToEnumerableAsync<Recipe, IRecipe>(),
-//                response => response.Recipes.Select(r => ToRecipe(r)),
-//                recipes => recipes
-//            );
+            return Repository.RetrievalAction(
+                ApiClient.GetMyRecipes(),
+                env => env.Db.Recipes.ToEnumerableAsync<Recipe, IRecipe>(),
+                response => response.Recipes.Select(r => ToRecipe(r)),
+                recipes => recipes
+            );
         }
         
         public static Monad.Reader<Enviroment, Task<IEnumerable<RecipeDetail>>> GetMyRecipeDetails()
