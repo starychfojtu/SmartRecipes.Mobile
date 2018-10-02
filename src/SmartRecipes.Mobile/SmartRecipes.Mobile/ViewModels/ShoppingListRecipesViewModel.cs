@@ -41,7 +41,7 @@ namespace SmartRecipes.Mobile.ViewModels
             return action(enviroment, item).MapToUserMessageAsync(_ =>
             {
                 UpdateRecipeItems(recipeItems.Remove(item));
-                return UserMessage.Deleted().ToOption();
+                return UserMessages.Deleted().ToOption();
             });
         }
 

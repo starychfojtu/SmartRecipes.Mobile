@@ -18,9 +18,11 @@ namespace SmartRecipes.Mobile.Infrastructure
                 .ToUnit();
         }
 
-        public static async Task SignUp()
+        public static Task<Unit> SignUp()
         {
-            Application.Current.MainPage = await PageFactory.GetPageAsync<SignUpPage>();
+            return PageFactory.GetPageAsync<SignUpPage>()
+                .Map(p => Application.Current.MainPage = p)
+                .ToUnit();
         }
 
         public static async Task CreateRecipe()

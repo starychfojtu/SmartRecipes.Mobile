@@ -55,14 +55,14 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             return MyRecipesHandler.Delete(enviroment, recipe)
                 .FlatMap(u => Try.Create(_ => InitializeAsync().ToUnit()))
-                .MapToUserMessage(_ => UserMessage.Deleted().ToOption());
+                .MapToUserMessage(_ => UserMessages.Deleted().ToOption());
         }
 
         private Task<IOption<UserMessage>> AddToShoppingList(IRecipe recipe)
         {
             return ShoppingListHandler
                 .AddToShoppingList(recipe, CurrentAccount, recipe.PersonCount)(enviroment)
-                .Map(_ => UserMessage.Added().ToOption());
+                .Map(_ => UserMessages.Added().ToOption());
         }
     }
 }

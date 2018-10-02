@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FuncSharp;
 using Xamarin.Forms;
 
 namespace SmartRecipes.Mobile.Extensions
 {
     public static class PageExtensions
     {
-        public static async Task LoaderAction(ActivityIndicator indicator, Func<Task> a)
+        public static Task LoaderAction(ActivityIndicator indicator, Func<Unit, Task<Unit>> a)
         {
             indicator.IsRunning = true;
-            await a();
-            indicator.IsRunning = false;
+            return a(Unit.Value).Map(_ => indicator.IsRunning = false);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using SmartRecipes.Mobile.Extensions;
+﻿using System.Threading.Tasks;
+using FuncSharp;
+using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -26,12 +28,13 @@ namespace SmartRecipes.Mobile.Pages
 
             SignInButton.Clicked += async (s, e) =>
             {
-                await LoaderAction(Loader, async () =>
+                await LoaderAction(Loader, _ =>
                 {
-                    if (!await viewModel.SignIn())
-                    {
-                        await DisplayAlert("Sign in failed.", "Email or password is incorrect.", "Ok");
-                    }
+                    var result = viewModel.SignIn();
+                    return result.Bind(r => r.Message
+                        .Map(m => DisplayAlert(m.Title, m.Text, "Ok").ToUnit())
+                        .GetOrElse(Task.CompletedTask.ToUnit())
+                    );
                 });
             };
             SignUpButton.Clicked += async (s, e) => await viewModel.SignUp();
@@ -44,7 +47,7 @@ namespace SmartRecipes.Mobile.Pages
             ScaleBackground(width, height);
         }
 
-        // TODO: move to generic placeholder
+        // TODO: move to generic utils
         private void ScaleBackground(double width, double height)
         {
             var backgroundAspectRatio = BackgroundWidth / BackgroundHeight;

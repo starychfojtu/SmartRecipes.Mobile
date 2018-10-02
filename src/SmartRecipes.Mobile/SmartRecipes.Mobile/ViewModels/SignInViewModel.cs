@@ -1,6 +1,7 @@
 ﻿using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
+using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 
@@ -26,15 +27,10 @@ namespace SmartRecipes.Mobile.ViewModels
         public ValidatableObject<string> Email { get; set; }
 
         public ValidatableObject<string> Password { get; set; }
-
-        public bool FormIsValid
+       
+        public Task<UserActionResult> SignIn()
         {
-            get { return Email.IsValid && Password.IsValid; }
-        }
-
-        // TODO: refactor bool/Usermessages to by IOption<UserMessage> ?
-        public Task<bool> SignIn()
-        {
+            var errorResult = Task.FromResult(UserActionResult.Error(UserMessages.InvalidCredentials()));
             if (FormIsValid)
             {
                 var credentials = new SignInCredentials(Email.Data, Password.Data);
@@ -44,18 +40,23 @@ namespace SmartRecipes.Mobile.ViewModels
                     {
                         return enviroment.Db.Seed()
                             .Bind(_ => Navigation.LogIn())
-                            .Map(_ => true);
+                            .Map(_ => UserActionResult.Success());
                     },
-                    e => Task.FromResult(false)
+                    e => errorResult
                 ));
             }
             
-            return Task.FromResult(false);
+            return errorResult;
         }
 
-        public async Task SignUp()
+        public Task<Unit> SignUp()
         {
-            await Navigation.SignUp();
+            return Navigation.SignUp();
+        }
+        
+        private bool FormIsValid
+        {
+            get { return Email.IsValid && Password.IsValid; }
         }
     }
 }

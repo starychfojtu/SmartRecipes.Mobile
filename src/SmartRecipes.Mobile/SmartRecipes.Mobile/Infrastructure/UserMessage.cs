@@ -10,7 +10,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 {
     public class UserMessage
     {
-        private UserMessage(string title, string text)
+        public UserMessage(string title, string text)
         {
             Title = title;
             Text = text;
@@ -38,7 +38,10 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             return Error(errors.Select(e => e.Message).Aggregate((s1, s2) => $"{s1}{Environment.NewLine}{s2}"));
         }
+    }
 
+    public static class UserMessages
+    {
         public static UserMessage Deleted()
         {
             return new UserMessage("Success", "Successfully deleted.");
@@ -47,6 +50,11 @@ namespace SmartRecipes.Mobile.Infrastructure
         public static UserMessage Added()
         {
             return new UserMessage("Success", "Successfully added.");
+        }
+        
+        public static UserMessage InvalidCredentials()
+        {
+            return new UserMessage("Error", "Invalid credentials.");
         }
     }
 }
