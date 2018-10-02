@@ -1,9 +1,11 @@
-﻿using SmartRecipes.Mobile.Models;
+﻿using System.Net.Security;
+using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
 using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
+using static SmartRecipes.Mobile.WriteModels.UserHandler;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -30,28 +32,35 @@ namespace SmartRecipes.Mobile.ViewModels
        
         public Task<UserActionResult> SignIn()
         {
-            var errorResult = Task.FromResult(UserActionResult.Error(UserMessages.InvalidCredentials()));
+            var invalidCredentials = Task.FromResult(UserActionResult.Error(UserMessages.InvalidCredentials()));
+            var noConnection = Task.FromResult(UserActionResult.Error(UserMessages.NoConnection()));
+            
             if (FormIsValid)
             {
                 var credentials = new SignInCredentials(Email.Data, Password.Data);
                 var authResult = UserHandler.SignIn(credentials).Execute(enviroment);
                 return authResult.Bind(r => r.Match(
-                    a =>
-                    {
-                        return enviroment.Db.Seed()
-                            .Bind(_ => Navigation.LogIn())
-                            .Map(_ => UserActionResult.Success());
-                    },
-                    e => errorResult
+                    a => OnSignedIn(),
+                    e => e.Match(
+                        AuthenticationError.InvalidCredentials, _ => invalidCredentials,
+                        AuthenticationError.NoConnection, _ => noConnection
+                    )
                 ));
             }
             
-            return errorResult;
+            return invalidCredentials;
         }
 
         public Task<Unit> SignUp()
         {
             return Navigation.SignUp();
+        }
+
+        private Task<UserActionResult> OnSignedIn()
+        {
+            return enviroment.Db.Seed()
+                .Bind(_ => Navigation.LogIn())
+                .Map(_ => UserActionResult.Success());
         }
         
         private bool FormIsValid
