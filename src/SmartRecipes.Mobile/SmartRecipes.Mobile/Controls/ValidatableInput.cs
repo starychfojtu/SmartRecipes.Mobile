@@ -17,7 +17,7 @@ namespace SmartRecipes.Mobile.Controls
             var layout = new StackLayout();
             var context = ValidatableBindingContext;
 
-            //context.Bind(DataEntry, Entry.TextProperty, c => c.Data);
+            //context.Bind(DataEntry, Entry.TextProperty, c => c.Value);
             //context.Bind(DataEntry, ValidatableEntry.ErrorsProperty, c => c.Errors);
             //context.Bind(ErrorLabel, Label.TextProperty, c => c.Errors.FirstOrDefault());
 

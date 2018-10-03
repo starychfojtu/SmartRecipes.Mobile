@@ -15,10 +15,10 @@ namespace SmartRecipes.Mobile.Pages
             BindingContext = viewModel;
 
             viewModel.BindErrors(NameEntry, vm => vm.Recipe.Name.IsValid);
-            viewModel.BindText(NameEntry, vm => vm.Recipe.Name.Data);
+            viewModel.BindText(NameEntry, vm => vm.Recipe.Name.Value);
             viewModel.BindText(ImageUrlEntry, vm => vm.Recipe.ImageUrl);
             viewModel.BindErrors(PersonCountEntry, vm => vm.Recipe.PersonCount.IsValid);
-            viewModel.BindText(PersonCountEntry, vm => vm.Recipe.PersonCount.Data);
+            viewModel.BindText(PersonCountEntry, vm => vm.Recipe.PersonCount.Value);
             viewModel.BindValue(TextEditor, Editor.TextProperty, vm => vm.Recipe.Text);
 
             IngredientsListView.ItemTemplate = new DataTemplate<FoodstuffAmountCell>();

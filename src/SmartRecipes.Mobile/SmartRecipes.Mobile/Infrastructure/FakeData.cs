@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 using SmartRecipes.Mobile.Models;
 
 namespace SmartRecipes.Mobile.Infrastructure
@@ -47,7 +48,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public static IAccount FakeAccount()
         {
-            return new Account(Guid.Parse("13cb78ee-0aca-4287-9ecb-b87b4e83411b"), "test@gmail.com", new AccessToken("fake"));
+            return new Account(Guid.Parse("13cb78ee-0aca-4287-9ecb-b87b4e83411b"), new MailAddress("test@gmail.com"), new AccessToken("fake"));
         }
 
         public static IEnumerable<Recipe> FakeRecipes()

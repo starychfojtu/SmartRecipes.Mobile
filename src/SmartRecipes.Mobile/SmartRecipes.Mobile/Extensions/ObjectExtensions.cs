@@ -9,6 +9,11 @@ namespace SmartRecipes.Mobile.Extensions
 {
     public static class ObjectExtensions
     {
+        public static Task<T> ToCompletedTask<T>(this T obj)
+        {
+            return Task.FromResult(obj);
+        }
+        
         public static IEnumerable<T> ToEnumerable<T>(this T obj)
         {
             yield return obj;

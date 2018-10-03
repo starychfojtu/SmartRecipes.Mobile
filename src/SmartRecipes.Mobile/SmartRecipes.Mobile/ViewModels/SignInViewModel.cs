@@ -1,4 +1,6 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
@@ -9,7 +11,7 @@ using static SmartRecipes.Mobile.WriteModels.UserHandler;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
-    public class SignInViewModel : ViewModel
+    public sealed class SignInViewModel : ViewModel
     {
         private readonly Enviroment enviroment;
 
@@ -17,11 +19,11 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             this.enviroment = enviroment;
             Email = ValidatableObject.Create<string>(
-                s => Validation.NotEmpty(s) && Validation.IsEmail(s),
+                s => Mail.Create(s).IsSuccess,
                 _ => RaisePropertyChanged(nameof(Email))
             );
             Password = ValidatableObject.Create<string>(
-                s => Validation.NotEmpty(s),
+                s => Models.Password.Create(s).IsSuccess,
                 _ => RaisePropertyChanged(nameof(Password))
             );
         }
@@ -32,40 +34,57 @@ namespace SmartRecipes.Mobile.ViewModels
        
         public Task<UserActionResult> SignIn()
         {
-            var invalidCredentials = Task.FromResult(UserActionResult.Error(UserMessages.InvalidCredentials()));
-            var noConnection = Task.FromResult(UserActionResult.Error(UserMessages.NoConnection()));
-            
-            if (FormIsValid)
-            {
-                var credentials = new SignInCredentials(Email.Data, Password.Data);
-                var authResult = UserHandler.SignIn(credentials).Execute(enviroment);
-                return authResult.Bind(r => r.Match(
-                    a => OnSignedIn(),
-                    e => e.Match(
-                        AuthenticationError.InvalidCredentials, _ => invalidCredentials,
-                        AuthenticationError.NoConnection, _ => noConnection
-                    )
-                ));
-            }
-            
-            return invalidCredentials;
+            return GetCredentials()
+                .MapError(e => new SignInErrorResult(e))
+                .ToCompletedTask()
+                .BindTry(credentials => SignIn(credentials))
+                .BindTry(a => Navigation.LogIn().Map(u => Try.Success<Unit, SignInErrorResult>(u)))
+                .Map(ToUserActionResult);
+        }
+
+        private Task<ITry<IAccount, SignInErrorResult>> SignIn(Credentials credentials)
+        {
+            var result = UserHandler.SignIn(credentials).Execute(enviroment);
+            return result.Map(r => r.MapError(e => new SignInErrorResult(e)));
+        }
+
+        private UserActionResult ToUserActionResult(ITry<Unit, SignInErrorResult> t)
+        {
+            return t.Match(
+                s => UserActionResult.Success(),
+                e => e.Match(
+                    signInError => signInError.Match(
+                        SignInError.InvalidCredentials, _ => UserActionResult.Error(UserMessages.InvalidCredentials()),
+                        SignInError.NoConnection, _ => UserActionResult.Error(UserMessages.NoConnection())
+                    ),
+                    exceptions => UserActionResult.Error(UserMessages.InvalidCredentials()) // TODO: implement proper handling
+                )
+            );
         }
 
         public Task<Unit> SignUp()
         {
             return Navigation.SignUp();
         }
-
-        private Task<UserActionResult> OnSignedIn()
-        {
-            return enviroment.Db.Seed()
-                .Bind(_ => Navigation.LogIn())
-                .Map(_ => UserActionResult.Success());
-        }
         
-        private bool FormIsValid
+        private ITry<Credentials> GetCredentials()
         {
-            get { return Email.IsValid && Password.IsValid; }
+            return Try.Aggregate(
+                Mail.Create(Email.Value),
+                Models.Password.Create(Password.Value),
+                Credentials.Create
+            );
+        }
+    }
+
+    public sealed class SignInErrorResult : Coproduct2<SignInError, IEnumerable<Exception>>
+    {
+        public SignInErrorResult(SignInError firstValue) : base(firstValue)
+        {
+        }
+
+        public SignInErrorResult(IEnumerable<Exception> secondValue) : base(secondValue)
+        {
         }
     }
 }

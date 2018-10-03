@@ -4,28 +4,28 @@ namespace SmartRecipes.Mobile.Infrastructure
 {
     public sealed class ValidatableObject<T>
     {
-        private T data;
+        private T value;
 
         private readonly Action<T> onDataChanged;
 
         private readonly Predicate<T> validate;
 
-        public ValidatableObject(T data, Predicate<T> validate, Action<T> onDataChanged)
+        public ValidatableObject(T value, Predicate<T> validate, Action<T> onDataChanged)
         {
-            this.data = data;
+            this.value = value;
             this.validate = validate;
             this.onDataChanged = onDataChanged;
-            IsValid = validate(data);
+            IsValid = validate(value);
         }
 
-        public T Data
+        public T Value
         {
-            get { return data; }
+            get { return value; }
             set
             {
-                data = value;
-                IsValid = validate(data);
-                onDataChanged?.Invoke(data);
+                this.value = value;
+                IsValid = validate(value);
+                onDataChanged?.Invoke(value);
             }
         }
 

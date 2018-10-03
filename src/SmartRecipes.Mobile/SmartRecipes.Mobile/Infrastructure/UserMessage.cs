@@ -57,6 +57,11 @@ namespace SmartRecipes.Mobile.Infrastructure
             return new UserMessage("Error", "Invalid credentials.");
         }
         
+        public static UserMessage InvalidForm()
+        {
+            return new UserMessage("Error", "Some fields are invalid.");
+        }
+        
         public static UserMessage NoConnection()
         {
             return new UserMessage("Error", "No internet connection.");

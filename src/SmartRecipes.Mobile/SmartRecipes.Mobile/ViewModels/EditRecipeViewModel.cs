@@ -74,9 +74,9 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             var recipe = Models.Recipe.Create(
                 CurrentAccount,
-                Recipe.Name.Data,
+                Recipe.Name.Value,
                 Recipe.ImageUrl.ToOption().Map(url => new Uri(url)),
-                Recipe.PersonCount.Data,
+                Recipe.PersonCount.Value,
                 Recipe.Text
             );
 
@@ -88,9 +88,9 @@ namespace SmartRecipes.Mobile.ViewModels
             var recipe = Models.Recipe.Create(
                 Recipe.Id.Value,
                 CurrentAccount.Id,
-                Recipe.Name.Data,
+                Recipe.Name.Value,
                 new Uri(Recipe.ImageUrl),
-                Recipe.PersonCount.Data,
+                Recipe.PersonCount.Value,
                 Recipe.Text
             );
 

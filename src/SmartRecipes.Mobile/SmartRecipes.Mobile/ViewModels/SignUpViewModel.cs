@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using SmartRecipes.Mobile.Infrastructure;
+using SmartRecipes.Mobile.Models;
+using SmartRecipes.Mobile.WriteModels.Dto;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -27,7 +29,13 @@ namespace SmartRecipes.Mobile.ViewModels
        
         public Task<UserActionResult> SignUp()
         {
-            throw new NotImplementedException();
+            if (FormIsValid)
+            {
+                var parameters = new SignUpParameters(new Credentials(Email.Value, Password.Value));
+                
+            }
+
+            return Task.FromResult(UserActionResult.Error(UserMessages.InvalidForm()));
         }
         
         private bool FormIsValid

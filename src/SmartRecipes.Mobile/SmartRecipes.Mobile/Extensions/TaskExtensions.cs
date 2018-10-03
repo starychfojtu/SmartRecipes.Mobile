@@ -16,6 +16,15 @@ namespace SmartRecipes.Mobile.Extensions
             return await binder(await task);
         }
         
+        public static async Task<ITry<B, E>> BindTry<A, B, E>(this Task<ITry<A, E>> task, Func<A, Task<ITry<B, E>>> binder)
+        {
+            var a = await task;
+            return await a.Match(
+                s => binder(s),
+                e => Try.Error<B, E>(e).ToCompletedTask()
+            );
+        }
+        
         public static Task<Unit> ToUnit<A>(this Task<A> task)
         {
             return task.Map(_ => Unit.Value);

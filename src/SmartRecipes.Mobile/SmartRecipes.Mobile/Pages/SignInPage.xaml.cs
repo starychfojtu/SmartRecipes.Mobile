@@ -21,10 +21,10 @@ namespace SmartRecipes.Mobile.Pages
             BindingContext = viewModel;
 
             viewModel.BindErrors(EmailEntry, vm => vm.Email.IsValid);
-            viewModel.BindText(EmailEntry, vm => vm.Email.Data);
+            viewModel.BindText(EmailEntry, vm => vm.Email.Value);
 
             viewModel.BindErrors(PasswordEntry, vm => vm.Password.IsValid);
-            viewModel.BindText(PasswordEntry, vm => vm.Password.Data);
+            viewModel.BindText(PasswordEntry, vm => vm.Password.Value);
 
             SignInButton.Clicked += async (s, e) =>
             {

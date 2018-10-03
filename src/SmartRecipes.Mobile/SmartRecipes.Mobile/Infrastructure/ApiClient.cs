@@ -27,6 +27,21 @@ namespace SmartRecipes.Mobile.Infrastructure
             return Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/signIn");
         }
         
+        public static Reader<Enviroment, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request)
+        {
+            return Post<SearchFoodstuffRequest, SearchFoodstuffResponse>(request, "/foodstuffs/");
+        }
+
+        public static Reader<Enviroment, Task<ApiResult<ShoppingListResponse>>> GetShoppingList()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static Reader<Enviroment, Task<ApiResult<MyRecipesResponse>>> GetMyRecipes()
+        {
+            throw new NotImplementedException();
+        }
+        
         private static Reader<Enviroment, Task<ApiResult<TResponse>>> Post<TRequest, TResponse>(TRequest request, string route)
         {
             return env =>
@@ -43,21 +58,6 @@ namespace SmartRecipes.Mobile.Infrastructure
                     );
                 });
             };
-        }
-        
-        public static Reader<Enviroment, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request)
-        {
-            return Post<SearchFoodstuffRequest, SearchFoodstuffResponse>(request, "/foodstuffs/");
-        }
-
-        public static Reader<Enviroment, Task<ApiResult<ShoppingListResponse>>> GetShoppingList()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static Reader<Enviroment, Task<ApiResult<MyRecipesResponse>>> GetMyRecipes()
-        {
-            throw new NotImplementedException();
         }
     }
 }

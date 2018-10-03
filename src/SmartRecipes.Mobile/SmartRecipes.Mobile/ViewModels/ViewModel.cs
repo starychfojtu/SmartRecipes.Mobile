@@ -19,6 +19,16 @@ namespace SmartRecipes.Mobile.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        protected Task<UserActionResult> Error(UserMessage message)
+        {
+            return Task.FromResult(UserActionResult.Error(message));
+        }
+        
+        protected Task<UserActionResult> Error(string message)
+        {
+            return Task.FromResult(UserActionResult.Error(new UserMessage("Error", message)));
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public virtual Task InitializeAsync()

@@ -40,9 +40,9 @@ namespace SmartRecipes.Mobile.Infrastructure
             viewModel.Mode = EditRecipeMode.Edit;
             viewModel.Ingredients = ingredients.ToImmutableDictionary(i => i.Foodstuff, i => i.Amount);
             viewModel.Recipe.Id = recipe.Id;
-            viewModel.Recipe.Name.Data = recipe.Name;
+            viewModel.Recipe.Name.Value = recipe.Name;
             viewModel.Recipe.ImageUrl = recipe.ImageUrl.AbsoluteUri;
-            viewModel.Recipe.PersonCount.Data = recipe.PersonCount;
+            viewModel.Recipe.PersonCount.Value = recipe.PersonCount;
             viewModel.Recipe.Text = recipe.Text;
 
             return new EditRecipePage(viewModel);

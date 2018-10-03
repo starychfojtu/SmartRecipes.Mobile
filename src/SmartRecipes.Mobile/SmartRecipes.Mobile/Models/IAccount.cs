@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Mail;
 
 namespace SmartRecipes.Mobile.Models
 {
@@ -6,7 +7,7 @@ namespace SmartRecipes.Mobile.Models
     {
         Guid Id { get; }
 
-        string Email { get; }
+        MailAddress Email { get; }
         
         AccessToken AccessToken { get; }
     }

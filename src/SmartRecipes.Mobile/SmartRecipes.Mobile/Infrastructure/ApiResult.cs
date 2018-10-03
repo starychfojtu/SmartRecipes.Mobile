@@ -1,4 +1,5 @@
-﻿using FuncSharp;
+﻿using System;
+using FuncSharp;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
@@ -14,6 +15,15 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public ApiResult(NoConnection thirdValue) : base(thirdValue)
         {
+        }
+
+        public TResult ContractMatchSuccess<TResult>(Func<T, TResult> ifSuccess, Func<NoConnection, TResult> ifNoConnection)
+        {
+            return Match(
+                ifSuccess,
+                _ => throw new InvalidOperationException("Internal error."),
+                ifNoConnection
+            );
         }
     }
     
