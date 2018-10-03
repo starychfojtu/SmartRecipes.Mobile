@@ -9,7 +9,7 @@ using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.WriteModels;
 using Xamarin.Forms;
-using Validation = SmartRecipes.Mobile.Infrastructure.Validation;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -21,13 +21,13 @@ namespace SmartRecipes.Mobile.ViewModels
 
     public class EditRecipeViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment environment;
 
-        public EditRecipeViewModel(Enviroment enviroment)
+        public EditRecipeViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this.environment = environment;
             Recipe = new FormDto(
-                new ValidatableObject<string>("", n => Validation.NotEmpty(n), _ => RaisePropertyChanged(nameof(Recipe))),
+                new ValidatableObject<string>("", n => !string.IsNullOrEmpty(n), _ => RaisePropertyChanged(nameof(Recipe))),
                 new ValidatableObject<int>(4, c => c > 0, _ => RaisePropertyChanged(nameof(Recipe)))
             );
             Ingredients = ImmutableDictionary.Create<IFoodstuff, IAmount>();
@@ -80,7 +80,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 Recipe.Text
             );
 
-            return MyRecipesHandler.Add(enviroment, recipe, getIngredients(recipe));
+            return MyRecipesHandler.Add(environment, recipe, getIngredients(recipe));
         }
 
         public Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
@@ -94,7 +94,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 Recipe.Text
             );
 
-            return MyRecipesHandler.Update(enviroment, recipe, getIngredients(recipe));
+            return MyRecipesHandler.Update(environment, recipe, getIngredients(recipe));
         }
 
         private Task<Unit> ChangeAmount(IFoodstuff foodstuff, Func<IAmount, IAmount, IOption<IAmount>> action)

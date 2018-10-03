@@ -10,20 +10,21 @@ using FuncSharp;
 using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
     public class ShoppingListItemsViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment _environment;
 
         private IImmutableList<ShoppingListItem> shoppingListItems { get; set; }
 
         private IImmutableDictionary<IFoodstuff, IAmount> requiredAmounts { get; set; }
 
-        public ShoppingListItemsViewModel(Enviroment enviroment)
+        public ShoppingListItemsViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this._environment = environment;
             shoppingListItems = ImmutableList.Create<ShoppingListItem>();
         }
 
@@ -34,8 +35,8 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public override async Task InitializeAsync()
         {
-            requiredAmounts = await ShoppingListRepository.GetRequiredAmounts(CurrentAccount)(enviroment);
-            UpdateShoppingListItems(await ShoppingListRepository.GetItems(CurrentAccount.Id)(enviroment));
+            requiredAmounts = await ShoppingListRepository.GetRequiredAmounts(CurrentAccount)(_environment);
+            UpdateShoppingListItems(await ShoppingListRepository.GetItems(CurrentAccount.Id)(_environment));
         }
 
         public async Task Refresh()
@@ -46,7 +47,7 @@ namespace SmartRecipes.Mobile.ViewModels
         public async Task OpenAddFoodstuffDialog()
         {
             var selected = await Navigation.SelectFoodstuffDialog();
-            var newShoppingListItems = await ShoppingListHandler.AddToShoppingList(enviroment, CurrentAccount, selected);
+            var newShoppingListItems = await ShoppingListHandler.AddToShoppingList(_environment, CurrentAccount, selected);
             var allShoppingListItems = shoppingListItems.Concat(newShoppingListItems);
             UpdateShoppingListItems(allShoppingListItems);
         }
@@ -59,13 +60,13 @@ namespace SmartRecipes.Mobile.ViewModels
             var oldItem = shoppingListItems.First(i => i.Foodstuff.Equals(shoppingListItem.Foodstuff));
             var newShoppingListItems = CollectionExtensions.Replace(shoppingListItems, oldItem, newShoppingListItem);
 
-            await ShoppingListHandler.Update(enviroment, newShoppingListItem.ItemAmount.ToEnumerable().ToImmutableList());
+            await ShoppingListHandler.Update(_environment, newShoppingListItem.ItemAmount.ToEnumerable().ToImmutableList());
             UpdateShoppingListItems(newShoppingListItems);
         }
         
         private IOption<UserMessage> DeleteItem(ShoppingListItem item)
         {
-            return ShoppingListHandler.RemoveFromShoppingList(enviroment, item, CurrentAccount).MapToUserMessage(_ =>
+            return ShoppingListHandler.RemoveFromShoppingList(_environment, item, CurrentAccount).MapToUserMessage(_ =>
             {
                 UpdateShoppingListItems(shoppingListItems.Remove(item));
                 return Option.Empty<UserMessage>();

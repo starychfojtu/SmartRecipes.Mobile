@@ -10,18 +10,19 @@ using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.WriteModels;
 using SmartRecipes.Mobile.ReadModels;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
     public class ShoppingListRecipesViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment _environment;
 
         private IImmutableList<ShoppingListRecipeItem> recipeItems;
 
-        public ShoppingListRecipesViewModel(Enviroment enviroment)
+        public ShoppingListRecipesViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this._environment = environment;
             recipeItems = ImmutableList.Create<ShoppingListRecipeItem>();
         }
 
@@ -32,13 +33,13 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public override async Task InitializeAsync()
         {
-            UpdateRecipeItems(await ShoppingListRepository.GetRecipeItems(CurrentAccount)(enviroment));
+            UpdateRecipeItems(await ShoppingListRepository.GetRecipeItems(CurrentAccount)(_environment));
         }
         
-        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Enviroment, ShoppingListRecipeItem, ITry<Task<Unit>>> action)
+        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Environment, ShoppingListRecipeItem, ITry<Task<Unit>>> action)
         {
             var item = recipeItems.First(r => r.Detail.Recipe.Equals(recipe));
-            return action(enviroment, item).MapToUserMessageAsync(_ =>
+            return action(_environment, item).MapToUserMessageAsync(_ =>
             {
                 UpdateRecipeItems(recipeItems.Remove(item));
                 return UserMessages.Deleted().ToOption();

@@ -2,23 +2,23 @@
 using System.Threading.Tasks;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
-using SmartRecipes.Mobile.WriteModels.Dto;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
     public class SignUpViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment environment;
 
-        public SignUpViewModel(Enviroment enviroment)
+        public SignUpViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this.environment = environment;
             Email = ValidatableObject.Create<string>(
-                s => Validation.NotEmpty(s) && Validation.IsEmail(s),
+                s => Mail.Create(s).IsSuccess,
                 _ => RaisePropertyChanged(nameof(Email))
             );
             Password = ValidatableObject.Create<string>(
-                s => Validation.NotEmpty(s),
+                s => Models.Password.Create(s).IsSuccess,
                 _ => RaisePropertyChanged(nameof(Password))
             );
         }
@@ -29,18 +29,7 @@ namespace SmartRecipes.Mobile.ViewModels
        
         public Task<UserActionResult> SignUp()
         {
-            if (FormIsValid)
-            {
-                var parameters = new SignUpParameters(new Credentials(Email.Value, Password.Value));
-                
-            }
-
-            return Task.FromResult(UserActionResult.Error(UserMessages.InvalidForm()));
-        }
-        
-        private bool FormIsValid
-        {
-            get { return Email.IsValid && Password.IsValid; }
+            throw new NotImplementedException();
         }
     }
 }

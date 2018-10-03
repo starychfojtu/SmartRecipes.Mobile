@@ -8,16 +8,17 @@ using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using static SmartRecipes.Mobile.WriteModels.UserHandler;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
     public sealed class SignInViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment environment;
 
-        public SignInViewModel(Enviroment enviroment)
+        public SignInViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this.environment = environment;
             Email = ValidatableObject.Create<string>(
                 s => Mail.Create(s).IsSuccess,
                 _ => RaisePropertyChanged(nameof(Email))
@@ -35,17 +36,25 @@ namespace SmartRecipes.Mobile.ViewModels
         public Task<UserActionResult> SignIn()
         {
             return GetCredentials()
-                .MapError(e => new SignInErrorResult(e))
-                .ToCompletedTask()
-                .BindTry(credentials => SignIn(credentials))
-                .BindTry(a => Navigation.LogIn().Map(u => Try.Success<Unit, SignInErrorResult>(u)))
+                .BindTry(SignIn)
+                .BindTry(OpenApp)
                 .Map(ToUserActionResult);
         }
 
+        public Task<Unit> SignUp()
+        {
+            return Navigation.SignUp();
+        }
+        
         private Task<ITry<IAccount, SignInErrorResult>> SignIn(Credentials credentials)
         {
-            var result = UserHandler.SignIn(credentials).Execute(enviroment);
+            var result = UserHandler.SignIn(credentials).Execute(environment);
             return result.Map(r => r.MapError(e => new SignInErrorResult(e)));
+        }
+        
+        private Task<ITry<Unit, SignInErrorResult>> OpenApp(IAccount a)
+        {
+            return Navigation.LogIn().Map(u => Try.Success<Unit, SignInErrorResult>(u));
         }
 
         private UserActionResult ToUserActionResult(ITry<Unit, SignInErrorResult> t)
@@ -57,23 +66,22 @@ namespace SmartRecipes.Mobile.ViewModels
                         SignInError.InvalidCredentials, _ => UserActionResult.Error(UserMessages.InvalidCredentials()),
                         SignInError.NoConnection, _ => UserActionResult.Error(UserMessages.NoConnection())
                     ),
-                    exceptions => UserActionResult.Error(UserMessages.InvalidCredentials()) // TODO: implement proper handling
+                    exceptions => exceptions.ToUserActionResult()
                 )
             );
         }
-
-        public Task<Unit> SignUp()
-        {
-            return Navigation.SignUp();
-        }
         
-        private ITry<Credentials> GetCredentials()
+        private Task<ITry<Credentials, SignInErrorResult>> GetCredentials()
         {
-            return Try.Aggregate(
+            var credentials =  Try.Aggregate(
                 Mail.Create(Email.Value),
                 Models.Password.Create(Password.Value),
                 Credentials.Create
             );
+
+            return credentials
+                .MapError(e => new SignInErrorResult(e))
+                .ToCompletedTask();
         }
     }
 

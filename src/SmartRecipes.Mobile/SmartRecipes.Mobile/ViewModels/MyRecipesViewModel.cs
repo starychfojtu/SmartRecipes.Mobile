@@ -12,11 +12,11 @@ namespace SmartRecipes.Mobile.ViewModels
 {
     public class MyRecipesViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment _environment;
 
-        public MyRecipesViewModel(Enviroment enviroment)
+        public MyRecipesViewModel(Environment environment)
         {
-            this.enviroment = enviroment;
+            this._environment = environment;
         }
 
         public IEnumerable<RecipeCellViewModel> Recipes { get; private set; }
@@ -33,7 +33,7 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public async Task UpdateRecipesAsync()
         {
-            var recipeDetails = await RecipeRepository.GetMyRecipeDetails()(enviroment);
+            var recipeDetails = await RecipeRepository.GetMyRecipeDetails()(_environment);
             Recipes = recipeDetails.Select(detail => new RecipeCellViewModel(
                 detail,
                 Option.Empty<int>(),
@@ -46,14 +46,14 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public async Task<IOption<UserMessage>> EditRecipe(IRecipe recipe)
         {
-            var detail = await RecipeRepository.GetDetail(recipe)(enviroment);
+            var detail = await RecipeRepository.GetDetail(recipe)(_environment);
             await Navigation.EditRecipe(detail);
             return Option.Empty<UserMessage>();
         }
 
         public IOption<UserMessage> DeleteRecipe(IRecipe recipe)
         {
-            return MyRecipesHandler.Delete(enviroment, recipe)
+            return MyRecipesHandler.Delete(_environment, recipe)
                 .FlatMap(u => Try.Create(_ => InitializeAsync().ToUnit()))
                 .MapToUserMessage(_ => UserMessages.Deleted().ToOption());
         }
@@ -61,7 +61,7 @@ namespace SmartRecipes.Mobile.ViewModels
         private Task<IOption<UserMessage>> AddToShoppingList(IRecipe recipe)
         {
             return ShoppingListHandler
-                .AddToShoppingList(recipe, CurrentAccount, recipe.PersonCount)(enviroment)
+                .AddToShoppingList(recipe, CurrentAccount, recipe.PersonCount)(_environment)
                 .Map(_ => UserMessages.Added().ToOption());
         }
     }

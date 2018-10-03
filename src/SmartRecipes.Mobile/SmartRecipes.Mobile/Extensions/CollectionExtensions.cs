@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using SmartRecipes.Mobile.Infrastructure;
+using Environment = System.Environment;
 
 namespace SmartRecipes.Mobile.Extensions
 {
@@ -46,6 +48,12 @@ namespace SmartRecipes.Mobile.Extensions
         {
             key = kvp.Key;
             value = kvp.Value;
+        }
+
+        public static UserActionResult ToUserActionResult(this IEnumerable<Exception> exceptions)
+        {
+            var message = exceptions.Select(e => e.Message).Aggregate((s1, s2) => $"{s1}{Environment.NewLine}{s2}");
+            return UserActionResult.Error(new UserMessage("Error", message));
         }
     }
 }

@@ -36,7 +36,7 @@ namespace SmartRecipes.Mobile.Infrastructure
         
         public static UserMessage Error(IEnumerable<Exception> errors)
         {
-            return Error(errors.Select(e => e.Message).Aggregate((s1, s2) => $"{s1}{Environment.NewLine}{s2}"));
+            return Error(errors.Select(e => e.Message).Aggregate((s1, s2) => $"{s1}{System.Environment.NewLine}{s2}"));
         }
     }
 

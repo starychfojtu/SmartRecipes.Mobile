@@ -2,6 +2,7 @@
 using System.IO;
 using SmartRecipes.Mobile.Infrastructure;
 using Xamarin.Forms;
+using Environment = System.Environment;
 
 [assembly: Dependency(typeof(SmartRecipes.Mobile.iOS.Services.FileHelper))]
 namespace SmartRecipes.Mobile.iOS.Services

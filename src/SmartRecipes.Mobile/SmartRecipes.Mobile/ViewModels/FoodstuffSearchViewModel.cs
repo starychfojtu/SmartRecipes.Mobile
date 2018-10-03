@@ -10,15 +10,15 @@ namespace SmartRecipes.Mobile.ViewModels
 {
     public class FoodstuffSearchViewModel : ViewModel
     {
-        private readonly Enviroment enviroment;
+        private readonly Environment _environment;
 
         private IEnumerable<IFoodstuff> searched;
 
-        public FoodstuffSearchViewModel(Enviroment enviroment)
+        public FoodstuffSearchViewModel(Environment environment)
         {
             searched = ImmutableList.Create<IFoodstuff>();
             Selected = ImmutableList.Create<IFoodstuff>();
-            this.enviroment = enviroment;
+            this._environment = environment;
         }
 
         public IEnumerable<FoodstuffSearchCellViewModel> SearchResult
@@ -30,7 +30,7 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public async Task Search(string query)
         {
-            searched = await FoodstuffRepository.Search(query)(enviroment);
+            searched = await FoodstuffRepository.Search(query)(_environment);
             RaisePropertyChanged(nameof(SearchResult));
         }
 

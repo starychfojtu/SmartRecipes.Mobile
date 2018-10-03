@@ -8,6 +8,7 @@ using Monad;
 using SmartRecipes.Mobile.ApiDto;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.WriteModels.Dto;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 using Try = FuncSharp.Try;
 
 namespace SmartRecipes.Mobile.WriteModels
@@ -20,7 +21,7 @@ namespace SmartRecipes.Mobile.WriteModels
             NoConnection
         }
         
-        public static Reader<Enviroment, Task<ITry<IAccount, SignInError>>> SignIn(Credentials credentials)
+        public static Reader<Environment, Task<ITry<IAccount, SignInError>>> SignIn(Credentials credentials)
         {
             var request = new SignInRequest(credentials.Email.Address, credentials.Password.Value);
             return ApiClient.Post(request).Map(r => r.Match(
@@ -41,7 +42,7 @@ namespace SmartRecipes.Mobile.WriteModels
             NoConnection
         }
         
-        public static Reader<Enviroment, Task<ITry<Unit, SignUpError>>> SignUp(SignUpParameters parameters)
+        public static Reader<Environment, Task<ITry<Unit, SignUpError>>> SignUp(SignUpParameters parameters)
         {
             var credentials = parameters.Credentials;
             var request = new SignUpRequest(credentials.Email.Address, credentials.Password.Value);

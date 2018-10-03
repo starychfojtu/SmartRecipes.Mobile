@@ -6,12 +6,13 @@ using System.Linq;
 using System;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ReadModels
 {
     public static class FoodstuffRepository
     {
-        public static Monad.Reader<Enviroment, Task<IEnumerable<IFoodstuff>>> Search(string query)
+        public static Monad.Reader<Environment, Task<IEnumerable<IFoodstuff>>> Search(string query)
         {
             return Repository.RetrievalAction(
                 ApiClient.Get(new SearchFoodstuffRequest(query)),
@@ -21,12 +22,12 @@ namespace SmartRecipes.Mobile.ReadModels
             );
         }
 
-        public static Monad.Reader<Enviroment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids)
+        public static Monad.Reader<Environment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids)
         {
             return env => env.Db.Foodstuffs.Where(f => ids.Contains(f.Id)).ToEnumerableAsync<Foodstuff, IFoodstuff>();
         }
 
-        private static Monad.Reader<Enviroment, Task<IEnumerable<IFoodstuff>>> SearchDb(string searchQuery)
+        private static Monad.Reader<Environment, Task<IEnumerable<IFoodstuff>>> SearchDb(string searchQuery)
         {
             return env =>
             {

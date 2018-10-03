@@ -5,14 +5,15 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.ReadModels
 {
     public static class Repository
     {
-        public static Monad.Reader<Enviroment, Task<TModel>> RetrievalAction<TModel, TResponse>(
-            Monad.Reader<Enviroment, Task<ApiResult<TResponse>>> apiCall,
-            Monad.Reader<Enviroment, Task<TModel>> databaseQuery,
+        public static Monad.Reader<Environment, Task<TModel>> RetrievalAction<TModel, TResponse>(
+            Monad.Reader<Environment, Task<ApiResult<TResponse>>> apiCall,
+            Monad.Reader<Environment, Task<TModel>> databaseQuery,
             Func<TResponse, TModel> responseMapper,
             Func<TModel, IEnumerable<object>> envtabaseMapper)
         {

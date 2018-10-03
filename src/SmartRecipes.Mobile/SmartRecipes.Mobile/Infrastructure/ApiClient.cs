@@ -12,37 +12,37 @@ namespace SmartRecipes.Mobile.Infrastructure
 {   
     public static class ApiClient
     {
-        public static Reader<Enviroment, Task<ApiResult<SignInResponse>>> Post(SignInRequest request)
+        public static Reader<Environment, Task<ApiResult<SignInResponse>>> Post(SignInRequest request)
         {
             return Post<SignInRequest, SignInResponse>(request, "/signIn");
         }
         
-        public static Reader<Enviroment, Task<ApiResult<SignUpResponse>>> Post(SignUpRequest request)
+        public static Reader<Environment, Task<ApiResult<SignUpResponse>>> Post(SignUpRequest request)
         {
             return Post<SignUpRequest, SignUpResponse>(request, "/signUp");
         }
         
-        public static Reader<Enviroment, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(ChangeFoodstuffAmountRequest request)
+        public static Reader<Environment, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(ChangeFoodstuffAmountRequest request)
         {
             return Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/signIn");
         }
         
-        public static Reader<Enviroment, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request)
+        public static Reader<Environment, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request)
         {
             return Post<SearchFoodstuffRequest, SearchFoodstuffResponse>(request, "/foodstuffs/");
         }
 
-        public static Reader<Enviroment, Task<ApiResult<ShoppingListResponse>>> GetShoppingList()
+        public static Reader<Environment, Task<ApiResult<ShoppingListResponse>>> GetShoppingList()
         {
             throw new NotImplementedException();
         }
 
-        public static Reader<Enviroment, Task<ApiResult<MyRecipesResponse>>> GetMyRecipes()
+        public static Reader<Environment, Task<ApiResult<MyRecipesResponse>>> GetMyRecipes()
         {
             throw new NotImplementedException();
         }
         
-        private static Reader<Enviroment, Task<ApiResult<TResponse>>> Post<TRequest, TResponse>(TRequest request, string route)
+        private static Reader<Environment, Task<ApiResult<TResponse>>> Post<TRequest, TResponse>(TRequest request, string route)
         {
             return env =>
             {

@@ -3,9 +3,9 @@ using System.Net.Http;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
-    public class Enviroment
+    public class Environment
     {
-        public Enviroment(HttpClient httpClient, Database database)
+        public Environment(HttpClient httpClient, Database database)
         {
             HttpClient = httpClient;
             Db = database;

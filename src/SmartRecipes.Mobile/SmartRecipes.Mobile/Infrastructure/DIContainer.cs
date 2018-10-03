@@ -25,7 +25,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             builder.RegisterInstance(new HttpClient()).As<HttpClient>();
             builder.RegisterType<Database>().SingleInstance();
             builder.RegisterType<HttpClient>().SingleInstance();
-            builder.RegisterType<Enviroment>().SingleInstance();
+            builder.RegisterType<Environment>().SingleInstance();
 
             // View models
             builder.RegisterType<SignInViewModel>();
