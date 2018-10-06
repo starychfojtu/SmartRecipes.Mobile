@@ -21,7 +21,7 @@ namespace SmartRecipes.Mobile.Extensions
             var a = await task;
             return await a.Match(
                 s => binder(s),
-                e => Try.Error<B, E>(e).ToCompletedTask()
+                e => Try.Error<B, E>(e).Async()
             );
         }
         

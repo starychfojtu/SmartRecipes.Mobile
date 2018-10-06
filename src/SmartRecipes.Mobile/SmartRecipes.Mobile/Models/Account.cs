@@ -5,17 +5,26 @@ namespace SmartRecipes.Mobile.Models
 {
     public class Account : IAccount
     {
-        public Account(Guid id, MailAddress email, AccessToken accessToken)
+        private Account(Guid id, MailAddress email, AccessToken accessToken)
         {
             Id = id;
-            Email = email;
-            AccessToken = accessToken;
+            _Email = email.Address;
+            _AccessToken = accessToken.Value;
         }
+        
+        public Account() { /* SqlLite */ }
 
         public Guid Id { get; }
-
-        public MailAddress Email { get; }
         
-        public AccessToken AccessToken { get; }
+        public string _Email { get; set; }
+        public MailAddress Email => new MailAddress(_Email);
+        
+        public string _AccessToken { get; set; }
+        public AccessToken AccessToken => new AccessToken(_AccessToken);
+
+        public static IAccount Create(Guid id, MailAddress email, AccessToken accessToken)
+        {
+            return new Account(id, email, accessToken);
+        }
     }
 }

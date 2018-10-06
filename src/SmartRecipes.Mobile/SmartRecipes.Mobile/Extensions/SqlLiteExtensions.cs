@@ -21,10 +21,11 @@ namespace SmartRecipes.Mobile.Extensions
             return tableQuery.ToEnumerableAsync().Map(t => t.Select(i => i as U));
         }
 
-        public static Task<IOption<T>> FirstOption<T>(this AsyncTableQuery<T> tableQuery)
-            where T : new()
+        public static Task<IOption<B>> FirstOption<A, B>(this AsyncTableQuery<A> tableQuery)
+            where A : new()
+            where B : class
         {
-            return tableQuery.FirstOrDefaultAsync().Map(t => t.ToOption());
+            return tableQuery.FirstOrDefaultAsync().Map(a => a.As<B>());
         }
     }
 }

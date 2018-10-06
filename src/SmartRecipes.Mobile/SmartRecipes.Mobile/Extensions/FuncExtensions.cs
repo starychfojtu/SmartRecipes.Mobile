@@ -32,6 +32,18 @@ namespace SmartRecipes.Mobile.Extensions
         {
             return reader.SelectMany(a => binder(a), (r1, r2) => r2);
         }
+        
+        public static Reader<E, Task<B>> Bind<E, A, B>(this Reader<E, Task<A>> reader, Func<A, Task<B>> binder)
+        {
+            return reader.Bind(a => new Reader<E, Task<B>>(env => binder(a)));
+        }
+        
+        public static Reader<E, Task<ITry<B, TE>>> Bind<E, A, B, TE>(this Reader<E, Task<ITry<A, TE>>> reader, Func<A, Reader<E, Task<ITry<B, TE>>>> binder)
+        {
+            return env => reader
+                .Execute(env)
+                .BindTry(t => binder(t).Execute(env));
+        }
 
         public static Reader<E, Task<C>> SelectMany<E, A, B, C>(
             this Reader<E, Task<A>> reader,

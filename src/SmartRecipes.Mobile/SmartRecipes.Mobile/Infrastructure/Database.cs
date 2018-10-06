@@ -80,12 +80,9 @@ namespace SmartRecipes.Mobile.Infrastructure
             get { return Connection.Table<RecipeInShoppingList>(); }
         }
         
-        public Task<Unit> Seed()
+        public AsyncTableQuery<Account> Accounts
         {
-            var foodstuffs = Foodstuffs.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeFoodstuffs()) : Tasks.Unit());
-            var recipes = Recipes.CountAsync().Bind(c => c == 0 ? AddAsync(FakeData.FakeRecipes()) : Tasks.Unit());
-
-            return foodstuffs.Bind(_ => recipes);
+            get { return Connection.Table<Account>(); }
         }
 
         private SQLiteAsyncConnection Connection
@@ -102,6 +99,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             syncConn.CreateTable<ShoppingListItemAmount>();
             syncConn.CreateTable<Foodstuff>();
             syncConn.CreateTable<RecipeInShoppingList>();
+            syncConn.CreateTable<Account>();
 
             return conn;
         }
