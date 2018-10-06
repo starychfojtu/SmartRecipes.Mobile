@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.Immutable;
+using System.Net;
+using Newtonsoft.Json;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
@@ -6,11 +8,12 @@ namespace SmartRecipes.Mobile.Infrastructure
     {
         public ApiError(string message, HttpStatusCode code)
         {
-            Message = message;
+            var errors = JsonConvert.DeserializeObject<string[]>(message);
+            Errors = errors.ToImmutableArray();
             Code = code;
         }
 
-        public string Message { get; }
+        public ImmutableArray<string> Errors { get; }
         
         public HttpStatusCode Code { get; }
     }

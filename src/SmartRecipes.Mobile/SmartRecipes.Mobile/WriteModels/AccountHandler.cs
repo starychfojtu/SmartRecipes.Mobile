@@ -1,9 +1,12 @@
-﻿using System.Net.Mail;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
 using Monad;
+using Newtonsoft.Json.Serialization;
 using SmartRecipes.Mobile.ApiDto;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.WriteModels.Dto;
@@ -54,18 +57,31 @@ namespace SmartRecipes.Mobile.WriteModels
         public enum SignUpError
         {
             AccountAlreadyExists,
+            InvalidEmail,
+            InvalidPassword,
             NoConnection
         }
+
+        public static Reader<Environment, Task<ITry<Unit, SignUpError[]>>> SignUp(string email, string password) =>
+            new SignUpRequest(email, password)
+                .Pipe(ApiClient.Post)
+                .Bind(r => ProcessApiResult(r).Async());
+
+        private static ITry<Unit, SignUpError[]> ProcessApiResult(ApiResult<SignUpResponse> response) =>
+            response.Match(
+                r => Success(),
+                error => Error(error.Errors.Select(e => e.Match(
+                    "Account already exists.", _ => SignUpError.AccountAlreadyExists,
+                    "Invalid email.", _ => SignUpError.InvalidEmail,
+                    "Invalid passoword.", _ => SignUpError.InvalidPassword
+                ))),
+                noConn => Error(new [] { SignUpError.NoConnection })
+            );
         
-        public static Reader<Environment, Task<ITry<Unit, SignUpError>>> SignUp(SignUpParameters parameters)
-        {
-            var credentials = parameters.Credentials;
-            var request = new SignUpRequest(credentials.Email.Address, credentials.Password.Value);
-            return ApiClient.Post(request).Map(r => r.Match(
-                response => Try.Success<Unit, SignUpError>(Unit.Value),
-                error => Try.Error<Unit, SignUpError>(SignUpError.AccountAlreadyExists),
-                noConn => Try.Error<Unit, SignUpError>(SignUpError.NoConnection)
-            ));
-        }
+        private static ITry<Unit, SignUpError[]> Error(IEnumerable<SignUpError> errors) =>
+            Try.Error<Unit, SignUpError[]>(errors.ToArray());
+        
+        private static ITry<Unit, SignUpError[]> Success() =>
+            Try.Success<Unit, SignUpError[]>(Unit.Value);
     }
 }
