@@ -18,8 +18,8 @@ namespace SmartRecipes.Mobile.Controls
             var context = ValidatableBindingContext;
 
             //context.Bind(DataEntry, Entry.TextProperty, c => c.Value);
-            //context.Bind(DataEntry, ValidatableEntry.ErrorsProperty, c => c.Errors);
-            //context.Bind(ErrorLabel, Label.TextProperty, c => c.Errors.FirstOrDefault());
+            //context.Bind(DataEntry, ValidatableEntry.ErrorsProperty, c => c.Messages);
+            //context.Bind(ErrorLabel, Label.TextProperty, c => c.Messages.FirstOrDefault());
 
             layout.Children.Add(DataEntry);
             layout.Children.Add(ErrorLabel);

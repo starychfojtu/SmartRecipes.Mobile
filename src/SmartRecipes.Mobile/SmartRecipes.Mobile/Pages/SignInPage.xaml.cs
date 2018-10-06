@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FuncSharp;
+﻿using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.ViewModels;
 using Xamarin.Forms;
@@ -20,23 +19,10 @@ namespace SmartRecipes.Mobile.Pages
 
             BindingContext = viewModel;
 
-            viewModel.BindErrors(EmailEntry, vm => vm.Email.IsValid);
-            viewModel.BindText(EmailEntry, vm => vm.Email.Value);
+            viewModel.BindText(EmailEntry, vm => vm.Email);
+            viewModel.BindText(PasswordEntry, vm => vm.Password);
 
-            viewModel.BindErrors(PasswordEntry, vm => vm.Password.IsValid);
-            viewModel.BindText(PasswordEntry, vm => vm.Password.Value);
-
-            SignInButton.Clicked += async (s, e) =>
-            {
-                await LoaderAction(Loader, _ =>
-                {
-                    var result = viewModel.SignIn();
-                    return result.Bind(r => r.Message
-                        .Map(m => DisplayAlert(m.Title, m.Text, "Ok").ToUnit())
-                        .GetOrElse(Task.CompletedTask.ToUnit())
-                    );
-                });
-            };
+            SignInButton.Clicked += async (s, e) => await this.AlertAction(Loader, _ => viewModel.SignIn());
             SignUpButton.Clicked += async (s, e) => await viewModel.SignUp();
         }
 

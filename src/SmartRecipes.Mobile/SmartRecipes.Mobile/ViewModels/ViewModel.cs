@@ -7,6 +7,8 @@ namespace SmartRecipes.Mobile.ViewModels
 {
     public class ViewModel : INotifyPropertyChanged
     {
+        protected IAccount CurrentAccount => null;
+        
         protected void RaisePropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

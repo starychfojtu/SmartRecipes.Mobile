@@ -4,8 +4,7 @@
     xmlns="http://xamarin.com/schemas/2014/forms"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Forms;assembly=FFImageLoading.Forms"
-    x:Class="SmartRecipes.Mobile.Pages.SignInPage"
-    xmlns:controls="clr-namespace:SmartRecipes.Mobile.Controls;assembly=SmartRecipes.Mobile">
+    x:Class="SmartRecipes.Mobile.Pages.SignInPage">
     <ContentPage.Content>
          <Grid
             IsClippedToBounds="true">
@@ -52,13 +51,13 @@
                 Margin="8"
                 VerticalOptions="CenterAndExpand">
 
-                <controls:ValidatableEntry
+                <Entry
                     Placeholder="Email"
                     x:Name="EmailEntry"
                     Margin="0, 0, 0, 4"
                     VerticalOptions="FillAndExpand"
                     Style="{StaticResource entry}"/>
-                <controls:ValidatableEntry 
+                <Entry
                     Placeholder="Password"
                     x:Name="PasswordEntry"
                     IsPassword="true"

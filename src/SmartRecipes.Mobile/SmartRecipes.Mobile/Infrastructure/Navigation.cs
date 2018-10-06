@@ -11,7 +11,7 @@ namespace SmartRecipes.Mobile.Infrastructure
 {
     public static class Navigation
     {
-        public static Task<Unit> LogIn()
+        public static Task<Unit> OpenApp()
         {
             return PageFactory.GetPageAsync<AppContainer>()
                 .Map(c => Application.Current.MainPage = new NavigationPage(c))
@@ -21,6 +21,13 @@ namespace SmartRecipes.Mobile.Infrastructure
         public static Task<Unit> SignUp()
         {
             return PageFactory.GetPageAsync<SignUpPage>()
+                .Map(p => Application.Current.MainPage = p)
+                .ToUnit();
+        }
+        
+        public static Task<Unit> SignIn()
+        {
+            return PageFactory.GetPageAsync<SignInPage>()
                 .Map(p => Application.Current.MainPage = p)
                 .ToUnit();
         }

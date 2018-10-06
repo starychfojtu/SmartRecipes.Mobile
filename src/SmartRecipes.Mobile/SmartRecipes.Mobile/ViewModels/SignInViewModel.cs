@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using SmartRecipes.Mobile.Models;
-using SmartRecipes.Mobile.WriteModels;
+﻿using SmartRecipes.Mobile.WriteModels;
 using System.Threading.Tasks;
 using FuncSharp;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
-using SmartRecipes.Mobile.ReadModels;
-using static SmartRecipes.Mobile.WriteModels.AccountHandler;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
+using static SmartRecipes.Mobile.WriteModels.AccountHandler;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -20,24 +15,16 @@ namespace SmartRecipes.Mobile.ViewModels
         public SignInViewModel(Environment environment)
         {
             this.environment = environment;
-            Email = ValidatableObject.Create<string>(
-                s => !string.IsNullOrEmpty(s),
-                _ => RaisePropertyChanged(nameof(Email))
-            );
-            Password = ValidatableObject.Create<string>(
-                s => !string.IsNullOrEmpty(s),
-                _ => RaisePropertyChanged(nameof(Password))
-            );
         }
 
-        public ValidatableObject<string> Email { get; set; }
+        public string Email { get; set; }
 
-        public ValidatableObject<string> Password { get; set; }
+        public string Password { get; set; }
        
         // Sign in
         
         public Task<UserActionResult> SignIn() =>
-            SignIn(Email.Value, Password.Value)
+            SignIn(Email, Password)
                 .Map(ToUserActionResult);
 
         private Task<ITry<Unit, SignInError>> SignIn(string email, string password) =>
@@ -48,7 +35,7 @@ namespace SmartRecipes.Mobile.ViewModels
         
         private Task<ITry<Unit, SignInError>> OpenApp(Unit u) => 
             Navigation
-                .LogIn()
+                .OpenApp()
                 .Map(_ => Try.Success<Unit, SignInError>(u));
 
         private UserActionResult ToUserActionResult(ITry<Unit, SignInError> t) => 

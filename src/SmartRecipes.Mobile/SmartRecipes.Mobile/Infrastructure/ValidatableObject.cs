@@ -1,4 +1,5 @@
 ﻿using System;
+using FuncSharp;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
@@ -29,7 +30,14 @@ namespace SmartRecipes.Mobile.Infrastructure
             }
         }
 
-        public bool IsValid { get; set; }
+        public bool IsValid { get; private set; }
+
+        public Unit Invalidate()
+        {
+            IsValid = false;
+            onDataChanged?.Invoke(Value);
+            return Unit.Value;
+        }
     }
 
     public static class ValidatableObject

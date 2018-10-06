@@ -1,20 +1,30 @@
-﻿using System.Collections.Immutable;
-using System.Net;
-using Newtonsoft.Json;
+﻿using System.Collections.Generic;
 
 namespace SmartRecipes.Mobile.Infrastructure
 {
     public sealed class ApiError
     {
-        public ApiError(string message, HttpStatusCode code)
+        public ApiError(string message, IEnumerable<ApiParameterError> parameterErrors)
         {
-            var errors = JsonConvert.DeserializeObject<string[]>(message);
-            Errors = errors.ToImmutableArray();
-            Code = code;
+            Message = message;
+            ParameterErrors = parameterErrors;
+        }
+        
+        public string Message { get; }
+        
+        public IEnumerable<ApiParameterError> ParameterErrors { get; }
+    }
+    
+    public sealed class ApiParameterError
+    {
+        public ApiParameterError(string message, string field)
+        {
+            Message = message;
+            Field = field;
         }
 
-        public ImmutableArray<string> Errors { get; }
+        public string Message { get; }
         
-        public HttpStatusCode Code { get; }
+        public string Field { get; }
     }
 }

@@ -6,10 +6,8 @@ using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.Models;
 using Monad;
-using Newtonsoft.Json.Serialization;
 using SmartRecipes.Mobile.ApiDto;
 using SmartRecipes.Mobile.Extensions;
-using SmartRecipes.Mobile.WriteModels.Dto;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 using Try = FuncSharp.Try;
 
@@ -58,7 +56,7 @@ namespace SmartRecipes.Mobile.WriteModels
         {
             AccountAlreadyExists,
             InvalidEmail,
-            InvalidPassword,
+            PasswordTooShort,
             NoConnection
         }
 
@@ -70,12 +68,19 @@ namespace SmartRecipes.Mobile.WriteModels
         private static ITry<Unit, SignUpError[]> ProcessApiResult(ApiResult<SignUpResponse> response) =>
             response.Match(
                 r => Success(),
-                error => Error(error.Errors.Select(e => e.Match(
-                    "Account already exists.", _ => SignUpError.AccountAlreadyExists,
-                    "Invalid email.", _ => SignUpError.InvalidEmail,
-                    "Invalid passoword.", _ => SignUpError.InvalidPassword
-                ))),
+                error => Error(ParseErrors(error)),
                 noConn => Error(new [] { SignUpError.NoConnection })
+            );
+
+        private static IEnumerable<SignUpError> ParseErrors(ApiError signUpError) =>
+            signUpError.ParameterErrors.ToNonEmptyOption().Match(
+                es => es.Select(e => e.Message.Match(
+                    SignUpResponse.InvalidEmail, _ => SignUpError.InvalidEmail,
+                    SignUpResponse.PasswordTooShort, _ => SignUpError.PasswordTooShort
+                )),
+                _ => signUpError.Message.Match(
+                    SignUpResponse.AccountAlreadyExists, u => SignUpError.AccountAlreadyExists
+                ).ToEnumerable()
             );
         
         private static ITry<Unit, SignUpError[]> Error(IEnumerable<SignUpError> errors) =>

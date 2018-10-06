@@ -66,5 +66,10 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             return new UserMessage("Error", "No internet connection.");
         }
+
+        public static UserMessage AccountAlreadyExists()
+        {
+            return new UserMessage("Error", "Account already exists.");
+        }
     }
 }

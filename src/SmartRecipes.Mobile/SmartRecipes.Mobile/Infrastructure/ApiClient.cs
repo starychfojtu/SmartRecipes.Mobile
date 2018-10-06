@@ -54,7 +54,7 @@ namespace SmartRecipes.Mobile.Infrastructure
                     var responseContent = r.Content.ReadAsStringAsync();
                     return responseContent.Map(c => r.IsSuccessStatusCode
                         ? Success(JsonConvert.DeserializeObject<TResponse>(c))
-                        : Error<TResponse>(new ApiError(c, r.StatusCode))
+                        : Error<TResponse>(JsonConvert.DeserializeObject<ApiError>(c))
                     );
                 });
             };
