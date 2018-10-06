@@ -10,5 +10,8 @@ namespace SmartRecipes.Mobile.ApiDto
 
         [JsonProperty("accountId")]
         public Guid AccountId { get; }
+        
+        [JsonProperty("email")]
+        public string Email { get; }
     }
 }

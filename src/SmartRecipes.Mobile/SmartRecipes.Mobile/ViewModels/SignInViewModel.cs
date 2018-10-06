@@ -21,11 +21,11 @@ namespace SmartRecipes.Mobile.ViewModels
         {
             this.environment = environment;
             Email = ValidatableObject.Create<string>(
-                s => Mail.Create(s).IsSuccess,
+                s => !string.IsNullOrEmpty(s),
                 _ => RaisePropertyChanged(nameof(Email))
             );
             Password = ValidatableObject.Create<string>(
-                s => Models.Password.Create(s).IsSuccess,
+                s => !string.IsNullOrEmpty(s),
                 _ => RaisePropertyChanged(nameof(Password))
             );
         }
@@ -34,59 +34,35 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public ValidatableObject<string> Password { get; set; }
        
+        // Sign in
+        
         public Task<UserActionResult> SignIn() =>
-            GetCredentials()
-                .BindTry(SignIn)
-                .BindTry(OpenApp)
+            SignIn(Email.Value, Password.Value)
                 .Map(ToUserActionResult);
 
-        public Task<Unit> SignUp() => 
-            Navigation.SignUp();
-        
-        private Task<ITry<IAccount, SignInErrorResult>> SignIn(Credentials credentials) =>
+        private Task<ITry<Unit, SignInError>> SignIn(string email, string password) =>
             AccountHandler
-                .SignIn(credentials)
-                .Execute(environment)
-                .Map(r => r.MapError(e => new SignInErrorResult(e)));
+                .SignIn(email, password)
+                .Bind(u => OpenApp(u).ToReader())
+                .Execute(environment);
         
-        private Task<ITry<Unit, SignInErrorResult>> OpenApp(IAccount a) => 
+        private Task<ITry<Unit, SignInError>> OpenApp(Unit u) => 
             Navigation
                 .LogIn()
-                .Map(u => Try.Success<Unit, SignInErrorResult>(u));
+                .Map(_ => Try.Success<Unit, SignInError>(u));
 
-        private UserActionResult ToUserActionResult(ITry<Unit, SignInErrorResult> t) => 
+        private UserActionResult ToUserActionResult(ITry<Unit, SignInError> t) => 
             t.Match(
                 s => UserActionResult.Success(),
                 e => e.Match(
-                    signInError => signInError.Match(
-                        SignInError.InvalidCredentials, _ => UserActionResult.Error(UserMessages.InvalidCredentials()),
-                        SignInError.NoConnection, _ => UserActionResult.Error(UserMessages.NoConnection())
-                    ),
-                    exceptions => exceptions.ToUserActionResult()
+                    SignInError.InvalidCredentials, _ => UserActionResult.Error(UserMessages.InvalidCredentials()),
+                    SignInError.NoConnection, _ => UserActionResult.Error(UserMessages.NoConnection())
                 )
             );
         
-        private Task<ITry<Credentials, SignInErrorResult>> GetCredentials() => 
-            ParseCredentials()
-                .MapError(e => new SignInErrorResult(e))
-                .Async();
-
-        private ITry<Credentials> ParseCredentials() =>
-            Try.Aggregate(
-                Mail.Create(Email.Value),
-                Models.Password.Create(Password.Value),
-                Credentials.Create
-            );
-    }
-
-    public sealed class SignInErrorResult : Coproduct2<SignInError, IEnumerable<Exception>>
-    {
-        public SignInErrorResult(SignInError firstValue) : base(firstValue)
-        {
-        }
-
-        public SignInErrorResult(IEnumerable<Exception> secondValue) : base(secondValue)
-        {
-        }
+        // Sign up
+        
+        public Task<Unit> SignUp() => 
+            Navigation.SignUp();
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Mail;
+﻿using System.Net.Mail;
 using System.Threading.Tasks;
 using FuncSharp;
 using SmartRecipes.Mobile.Infrastructure;
@@ -22,22 +21,22 @@ namespace SmartRecipes.Mobile.WriteModels
             InvalidCredentials,
             NoConnection
         }
-
-        public static Reader<Environment, Task<ITry<Unit, SignInError>>> SignIn(Credentials credentials) =>
-            new SignInRequest(credentials.Email.Address, credentials.Password.Value)
+        
+        public static Reader<Environment, Task<ITry<Unit, SignInError>>> SignIn(string email, string password) =>
+            new SignInRequest(email, password)
                 .Pipe(ApiClient.Post)
-                .Bind(r => ProcessApiResult(r, credentials.Email).Async())
+                .Bind(r => ProcessApiResult(r).Async())
                 .Bind(SaveAccount);
         
-        private static ITry<IAccount, SignInError> ProcessApiResult(ApiResult<SignInResponse> result, MailAddress mail) =>
+        private static ITry<IAccount, SignInError> ProcessApiResult(ApiResult<SignInResponse> result) =>
             result.Match(
-                r => Success(ToAccount(r, mail)),
+                r => Success(ToAccount(r)),
                 error => Error(SignInError.InvalidCredentials),
                 noConn => Error(SignInError.NoConnection)
             );
 
-        private static IAccount ToAccount(SignInResponse response, MailAddress email) =>
-            Account.Create(response.AccountId, email, new AccessToken(response.Token));
+        private static IAccount ToAccount(SignInResponse response) =>
+            Account.Create(response.AccountId, new MailAddress(response.Email), new AccessToken(response.Token));
 
         private static Reader<Environment, Task<ITry<Unit, SignInError>>> SaveAccount(IAccount account) =>
             env => env.Db

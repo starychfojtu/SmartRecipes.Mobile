@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Monad;
 using SmartRecipes.Mobile.Controls;
 using Xamarin.Forms;
+using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 
 namespace SmartRecipes.Mobile.Extensions
 {
@@ -11,6 +13,9 @@ namespace SmartRecipes.Mobile.Extensions
     {
         public static Task<T> Async<T>(this T obj) =>
             Task.FromResult(obj);
+
+        public static Reader<Environment, T> ToReader<T>(this T obj) =>
+            env => obj;
         
         public static B Pipe<A, B>(this A obj, Func<A, B> f) => 
             f(obj);
