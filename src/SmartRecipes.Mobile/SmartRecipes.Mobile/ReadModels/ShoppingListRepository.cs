@@ -7,6 +7,7 @@ using SmartRecipes.Mobile.ReadModels.Dto;
 using SmartRecipes.Mobile.Models;
 using System.Collections.Immutable;
 using FuncSharp;
+using Monad;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
@@ -15,32 +16,25 @@ namespace SmartRecipes.Mobile.ReadModels
 {
     public static class ShoppingListRepository
     {
-        public static Monad.Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetItems(Guid ownerId)
-        {
-            return Repository.RetrievalAction(
+        public static Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetItems(Guid ownerId) =>
+            Repository.RetrievalAction(
                 ApiClient.GetShoppingList(),
                 GetShoppingListItems(),
                 response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
                 items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
             );
-        }
 
-        public static Monad.Reader<Environment, Task<IEnumerable<ShoppingListRecipeItem>>> GetRecipeItems(IAccount owner)
-        {
-            return
-                from recipesInList in GetRecipesInShoppingList(owner)
-                from recipes in RecipeRepository.GetRecipes(recipesInList.Select(r => r.RecipeId))
-                from details in RecipeRepository.GetDetails(recipes)
-                select recipesInList.Join(details, r => r.RecipeId, d => d.Recipe.Id, (r, d) => new ShoppingListRecipeItem(d, r));
-        }
+        public static Reader<Environment, Task<IEnumerable<ShoppingListRecipeItem>>> GetRecipeItems(IAccount owner) =>
+            from recipesInList in GetRecipesInShoppingList(owner)
+            from recipes in RecipeRepository.GetRecipes(recipesInList.Select(r => r.RecipeId))
+            from details in RecipeRepository.GetDetails(recipes)
+            select recipesInList.Join(details, r => r.RecipeId, d => d.Recipe.Id, (r, d) => new ShoppingListRecipeItem(d, r));
 
-        public static Monad.Reader<Environment, Task<ImmutableDictionary<IFoodstuff, IAmount>>> GetRequiredAmounts(IAccount owner)
-        {
-            return GetRecipeItems(owner).Select(rs => rs.Aggregate(
+        public static Reader<Environment, Task<ImmutableDictionary<IFoodstuff, IAmount>>> GetRequiredAmounts(IAccount owner) =>
+            GetRecipeItems(owner).Map(items => items.Aggregate(
                 ImmutableDictionary.Create<IFoodstuff, IAmount>(),
                 (r, item) => r.Merge(GetRequiredAmounts(item), (a1, a2) => Amount.Add(a1, a2).GetOrElse(a2))
             ));
-        }
         
         public static ImmutableDictionary<IFoodstuff, IAmount> GetRequiredAmounts(ShoppingListRecipeItem item)
         {
@@ -56,30 +50,21 @@ namespace SmartRecipes.Mobile.ReadModels
             });
         }
 
-        private static Monad.Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetShoppingListItems()
-        {
-            return
-                from itemAmounts in GetShoppingListItemAmounts()
-                from foodstuffs in GetFoodstuffs(itemAmounts.Select(i => i.FoodstuffId))
-                select itemAmounts.Join(foodstuffs, i => i.FoodstuffId, f => f.Id, (i, f) => new ShoppingListItem(f, i));
-        }
+        private static Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetShoppingListItems() =>
+            from itemAmounts in GetShoppingListItemAmounts()
+            from foodstuffs in GetFoodstuffs(itemAmounts.Select(i => i.FoodstuffId))
+            select itemAmounts.Join(foodstuffs, i => i.FoodstuffId, f => f.Id, (i, f) => new ShoppingListItem(f, i));
 
-        private static Monad.Reader<Environment, Task<IEnumerable<IShoppingListItemAmount>>> GetShoppingListItemAmounts()
-        {
-            return env => env.Db.ShoppingListItemAmounts.ToEnumerableAsync<ShoppingListItemAmount, IShoppingListItemAmount>();
-        }
+        private static Reader<Environment, Task<IEnumerable<IShoppingListItemAmount>>> GetShoppingListItemAmounts() =>
+            env => env.Db.ShoppingListItemAmounts.ToEnumerableAsync<ShoppingListItemAmount, IShoppingListItemAmount>();
 
-        private static Monad.Reader<Environment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids)
-        {
-            return env => env.Db.Foodstuffs.Where(f => ids.Contains(f.Id)).ToEnumerableAsync<Foodstuff, IFoodstuff>();
-        }
+        private static Reader<Environment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids) =>
+            env => env.Db.Foodstuffs.Where(f => ids.Contains(f.Id)).ToEnumerableAsync<Foodstuff, IFoodstuff>();
 
-        private static Monad.Reader<Environment, Task<IEnumerable<IRecipeInShoppingList>>> GetRecipesInShoppingList(IAccount owner)
-        {
-            return env => env.Db.RecipeInShoppingLists
+        private static Reader<Environment, Task<IEnumerable<IRecipeInShoppingList>>> GetRecipesInShoppingList(IAccount owner) =>
+            env => env.Db.RecipeInShoppingLists
                 .Where(r => r.ShoppingListOwnerId == owner.Id)
                 .ToEnumerableAsync<RecipeInShoppingList, IRecipeInShoppingList>();
-        }
         
         private static ShoppingListItem ToShoppingListItem(ShoppingListResponse.Item i, Guid ownerId)
         {
