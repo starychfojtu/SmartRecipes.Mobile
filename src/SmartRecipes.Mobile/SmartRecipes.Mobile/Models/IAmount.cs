@@ -2,10 +2,10 @@
 {
     public interface IAmount
     {
-        int Count { get; }
+        float Count { get; }
 
         AmountUnit Unit { get; }
 
-        IAmount WithCount(int count);
+        IAmount WithCount(float count);
     }
 }

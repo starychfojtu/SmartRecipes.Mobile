@@ -6,7 +6,7 @@ namespace SmartRecipes.Mobile.ReadModels.Dto
 {
     public class RecipeDetail
     {
-        public RecipeDetail(IRecipe recipe, IEnumerable<Ingredient> ingredients)
+        public RecipeDetail(IRecipe recipe, IEnumerable<IngredientWithFoodstuff> ingredients)
         {
             Recipe = recipe;
             Ingredients = ingredients.Select(i => i);
@@ -14,6 +14,6 @@ namespace SmartRecipes.Mobile.ReadModels.Dto
 
         public IRecipe Recipe { get; }
 
-        public IEnumerable<Ingredient> Ingredients { get; }
+        public IEnumerable<IngredientWithFoodstuff> Ingredients { get; }
     }
 }

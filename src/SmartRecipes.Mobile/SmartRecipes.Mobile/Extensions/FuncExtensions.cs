@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FuncSharp;
@@ -65,6 +67,12 @@ namespace SmartRecipes.Mobile.Extensions
         public static Reader<E, Task<B>> Map<E, A, B>(this Reader<E, Task<A>> reader, Func<A, B> project)
         {
             return reader.Select(project);
+        }
+
+        public static Reader<E, Task<IEnumerable<A>>> Traverse<A, E>(this IEnumerable<Reader<E, Task<A>>> readerSeq)
+        {
+            return new Reader<E, IEnumerable<Task<A>>>(env => readerSeq.Select(r => r.Execute(env)))
+                .Select(tasks => Task.WhenAll(tasks).Map(results => results as IEnumerable<A>));
         }
 
         public static Task<IOption<UserMessage>> MapToUserMessageAsync<A>(this ITry<Task<A>> aTry, Func<A, IOption<UserMessage>> mapper)

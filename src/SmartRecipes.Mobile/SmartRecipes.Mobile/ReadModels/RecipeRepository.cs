@@ -9,62 +9,53 @@ using Monad;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
+using Ingredient = SmartRecipes.Mobile.Models.Ingredient;
 
 namespace SmartRecipes.Mobile.ReadModels
 {
     public static class RecipeRepository
     {
-        public static Monad.Reader<Environment, Task<IEnumerable<IRecipe>>> GetMyRecipes()
-        {
-            return Repository.RetrievalAction(
+        // Get my recipes
+        
+        public static Reader<Environment, Task<IEnumerable<IRecipe>>> GetMyRecipes() =>
+            Repository.RetrievalAction(
                 ApiClient.GetMyRecipes(),
                 env => env.Db.Recipes.ToEnumerableAsync<Recipe, IRecipe>(),
                 response => response.Recipes.Select(r => ToRecipe(r)),
                 recipes => recipes
             );
-        }
         
-        public static Monad.Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetMyRecipeDetails()
-        {
-            return GetMyRecipes().Bind(rs => GetDetails(rs));
-        }
+        private static Recipe ToRecipe(MyRecipesResponse.Recipe r) =>
+            Recipe.Create(r.Id, r.OwnerId, r.Name, r.ImageUrl, r.PersonCount, r.Text);
+        
+        // Get detail(s)
+        
+        public static Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetMyRecipeDetails() =>
+            GetMyRecipes().Bind(GetDetails);
 
-        public static Monad.Reader<Environment, Task<RecipeDetail>> GetDetail(IRecipe recipe)
-        {
-            return GetIngredients(recipe).Select(i => new RecipeDetail(recipe, i));
-        }
+        public static Reader<Environment, Task<RecipeDetail>> GetDetail(IRecipe recipe) =>
+            GetIngredients(recipe).Select(i => new RecipeDetail(recipe, i));
 
-        public static Monad.Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetDetails(IEnumerable<IRecipe> recipes)
-        {
-            return env => Task.WhenAll(recipes.Select(r => GetDetail(r)(env))).Map(ds => ds as IEnumerable<RecipeDetail>);
-        }
+        public static Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetDetails(IEnumerable<IRecipe> recipes) =>
+            recipes.Select(GetDetail).Traverse();
 
-        public static Monad.Reader<Environment, Task<IRecipe>> GetRecipe(Guid recipeId)
-        {
-            return GetRecipes(recipeId.ToEnumerable()).Select(rs => rs.First()); 
-        }
+        // Get by ids
+        
+        public static Reader<Environment, Task<IEnumerable<IRecipe>>> Get(IEnumerable<Guid> ids) =>
+            env => env.Db.Recipes
+                .Where(r => ids.Contains(r.Id))
+                .ToEnumerableAsync<Recipe, IRecipe>();
 
-        public static Monad.Reader<Environment, Task<IEnumerable<IRecipe>>> GetRecipes(IEnumerable<Guid> ids)
-        {
-            return env => env.Db.Recipes.Where(r => ids.Contains(r.Id)).ToEnumerableAsync<Recipe, IRecipe>();
-        }
+        public static Reader<Environment, Task<IEnumerable<IngredientWithFoodstuff>>> GetIngredients(IRecipe recipe) =>
+            from ingredients in GetIngredientAmounts(recipe)
+            from foodstuffs in FoodstuffRepository.Get(ingredients.Select(i => i.FoodstuffId))
+            select ingredients.Join(foodstuffs, i => i.FoodstuffId, f => f.Id, (i, f) => new IngredientWithFoodstuff(f, i));
 
-        public static Monad.Reader<Environment, Task<IEnumerable<Ingredient>>> GetIngredients(IRecipe recipe)
-        {
-            return 
-                from ias in GetIngredientAmounts(recipe)
-                from fs in FoodstuffRepository.GetFoodstuffs(ias.Select(i => i.FoodstuffId))
-                select ias.Join(fs, i => i.FoodstuffId, f => f.Id, (i, f) => new Ingredient(f, i));
-        }
+        public static Reader<Environment, Task<IEnumerable<IIngredient>>> GetIngredientAmounts(IRecipe recipe) =>
+            env => env.Db.Ingredients
+                .Where(i => i.RecipeId == recipe.Id)
+                .ToEnumerableAsync<Ingredient, IIngredient>();
 
-        public static Monad.Reader<Environment, Task<IEnumerable<IngredientAmount>>> GetIngredientAmounts(IRecipe recipe)
-        {
-            return env => env.Db.IngredientAmounts.Where(i => i.RecipeId == recipe.Id).ToEnumerableAsync();
-        }
-
-        private static Recipe ToRecipe(MyRecipesResponse.Recipe r)
-        {
-            return Recipe.Create(r.Id, r.OwnerId, r.Name, r.ImageUrl, r.PersonCount, r.Text);
-        }
+        
     }
 }

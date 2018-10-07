@@ -15,7 +15,7 @@ namespace SmartRecipes.Mobile.WriteModels
                 .Bind(_ => environment.Db.AddAsync(ingredients));
         }
 
-        public static Task<Unit> Update(Environment environment, IRecipe recipe, IEnumerable<IIngredientAmount> ingredients)
+        public static Task<Unit> Update(Environment environment, IRecipe recipe, IEnumerable<IIngredient> ingredients)
         {
             return environment.Db.UpdateAsync(recipe)
                 .Bind(_ => DeleteIngredients(environment.Db, recipe))
@@ -30,8 +30,8 @@ namespace SmartRecipes.Mobile.WriteModels
                 var recipeInShoppingListRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(RecipeInShoppingList.RecipeId));
                 var deleteRecipesInShoppingLists = $"DELETE FROM {recipeInShoppingList.TableName} WHERE {recipeInShoppingListRecipeId.Name} = ?";
                 
-                var ingredientAmounts = environment.Db.GetTableMapping<IngredientAmount>();
-                var ingredientAmountRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(IngredientAmount.RecipeId));
+                var ingredientAmounts = environment.Db.GetTableMapping<Ingredient>();
+                var ingredientAmountRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(Ingredient.RecipeId));
                 var deleteIngredientAMounts = $"DELETE FROM {ingredientAmounts.TableName} WHERE {ingredientAmountRecipeId.Name} = ?";
 
                 return environment.Db.Execute(deleteRecipesInShoppingLists, recipe.Id)
@@ -42,8 +42,8 @@ namespace SmartRecipes.Mobile.WriteModels
 
         private static Task<Unit> DeleteIngredients(Database database, IRecipe recipe)
         {
-            var ingredientAmounts = database.GetTableMapping<IngredientAmount>();
-            var recipeId = ingredientAmounts.FindColumnWithPropertyName(nameof(IngredientAmount.RecipeId)).Name;
+            var ingredientAmounts = database.GetTableMapping<Ingredient>();
+            var recipeId = ingredientAmounts.FindColumnWithPropertyName(nameof(Ingredient.RecipeId)).Name;
             var deleteCommand = $@"DELETE FROM {ingredientAmounts.TableName} WHERE {recipeId} = ?";
 
             return database.Execute(deleteCommand, recipe.Id);

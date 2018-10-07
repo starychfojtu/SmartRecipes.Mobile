@@ -2,11 +2,11 @@
 
 namespace SmartRecipes.Mobile.Models
 {
-    public interface IIngredientAmount : IFoodstuffAmount
+    public interface IIngredient : IFoodstuffAmount
     {
         Guid RecipeId { get; }
 
-        IIngredientAmount WithAmount(IAmount amount);
+        IIngredient WithAmount(IAmount amount);
 
         // IFoodstuffAmount WithRecipe(IRecipe recipe);
     }

@@ -11,22 +11,23 @@ using Monad;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
+using ShoppingListItem = SmartRecipes.Mobile.Models.ShoppingListItem;
 
 namespace SmartRecipes.Mobile.ReadModels
 {
     public static class ShoppingListRepository
     {
-        public static Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetItems(Guid ownerId) =>
+        public static Reader<Environment, Task<IEnumerable<ShoppingListItemWithFoodstuff>>> GetItems(Guid ownerId) =>
             Repository.RetrievalAction(
                 ApiClient.GetShoppingList(),
                 GetShoppingListItems(),
                 response => response.Items.Select(i => ToShoppingListItem(i, ownerId)),
-                items => items.SelectMany(i => new object[] { i.Foodstuff, i.ItemAmount })
+                items => items.SelectMany(i => new object[] { i.Foodstuff, i.Item })
             );
 
         public static Reader<Environment, Task<IEnumerable<ShoppingListRecipeItem>>> GetRecipeItems(IAccount owner) =>
             from recipesInList in GetRecipesInShoppingList(owner)
-            from recipes in RecipeRepository.GetRecipes(recipesInList.Select(r => r.RecipeId))
+            from recipes in RecipeRepository.Get(recipesInList.Select(r => r.RecipeId))
             from details in RecipeRepository.GetDetails(recipes)
             select recipesInList.Join(details, r => r.RecipeId, d => d.Recipe.Id, (r, d) => new ShoppingListRecipeItem(d, r));
 
@@ -50,13 +51,13 @@ namespace SmartRecipes.Mobile.ReadModels
             });
         }
 
-        private static Reader<Environment, Task<IEnumerable<ShoppingListItem>>> GetShoppingListItems() =>
+        private static Reader<Environment, Task<IEnumerable<Dto.ShoppingListItemWithFoodstuff>>> GetShoppingListItems() =>
             from itemAmounts in GetShoppingListItemAmounts()
             from foodstuffs in GetFoodstuffs(itemAmounts.Select(i => i.FoodstuffId))
-            select itemAmounts.Join(foodstuffs, i => i.FoodstuffId, f => f.Id, (i, f) => new ShoppingListItem(f, i));
+            select itemAmounts.Join(foodstuffs, i => i.FoodstuffId, f => f.Id, (i, f) => new Dto.ShoppingListItemWithFoodstuff(f, i));
 
-        private static Reader<Environment, Task<IEnumerable<IShoppingListItemAmount>>> GetShoppingListItemAmounts() =>
-            env => env.Db.ShoppingListItemAmounts.ToEnumerableAsync<ShoppingListItemAmount, IShoppingListItemAmount>();
+        private static Reader<Environment, Task<IEnumerable<IShoppingListItem>>> GetShoppingListItemAmounts() =>
+            env => env.Db.ShoppingListItems.ToEnumerableAsync<ShoppingListItem, IShoppingListItem>();
 
         private static Reader<Environment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids) =>
             env => env.Db.Foodstuffs.Where(f => ids.Contains(f.Id)).ToEnumerableAsync<Foodstuff, IFoodstuff>();
@@ -66,7 +67,7 @@ namespace SmartRecipes.Mobile.ReadModels
                 .Where(r => r.ShoppingListOwnerId == owner.Id)
                 .ToEnumerableAsync<RecipeInShoppingList, IRecipeInShoppingList>();
         
-        private static ShoppingListItem ToShoppingListItem(ShoppingListResponse.Item i, Guid ownerId)
+        private static Dto.ShoppingListItemWithFoodstuff ToShoppingListItem(ShoppingListResponse.Item i, Guid ownerId)
         {
             var foodstuff = Foodstuff.Create(
                 i.FoodstuffDto.Id,
@@ -75,7 +76,7 @@ namespace SmartRecipes.Mobile.ReadModels
                 i.FoodstuffDto.BaseAmount,
                 i.FoodstuffDto.AmountStep
             );
-            return new ShoppingListItem(foodstuff, ShoppingListItemAmount.Create(i.Id, ownerId, foodstuff.Id, i.Amount));
+            return new Dto.ShoppingListItemWithFoodstuff(foodstuff, ShoppingListItem.Create(i.Id, ownerId, foodstuff.Id, i.Amount));
         }
     }
 }

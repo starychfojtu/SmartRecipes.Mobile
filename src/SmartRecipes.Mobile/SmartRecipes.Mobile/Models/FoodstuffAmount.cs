@@ -19,7 +19,7 @@ namespace SmartRecipes.Mobile.Models
 
         public Guid FoodstuffId { get; set; }
 
-        public int _Count { get; set; }
+        public float _Count { get; set; }
         public AmountUnit _Unit { get; set; }
         [Ignore]
         public IAmount Amount

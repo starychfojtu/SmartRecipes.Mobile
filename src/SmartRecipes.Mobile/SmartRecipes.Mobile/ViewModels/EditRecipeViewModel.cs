@@ -62,15 +62,15 @@ namespace SmartRecipes.Mobile.ViewModels
             }
 
             var submitTask = Mode == EditRecipeMode.New
-                ? CreateRecipe(r => Ingredients.Select(kvp => IngredientAmount.Create(r, kvp.Key, kvp.Value)))
-                : UpdateRecipe(r => Ingredients.Select(kvp => IngredientAmount.Create(r, kvp.Key, kvp.Value)));
+                ? CreateRecipe(r => Ingredients.Select(kvp => Ingredient.Create(r, kvp.Key, kvp.Value)))
+                : UpdateRecipe(r => Ingredients.Select(kvp => Ingredient.Create(r, kvp.Key, kvp.Value)));
 
             return submitTask
                 .Bind(_ => Application.Current.MainPage.Navigation.PopAsync())
                 .Map(_ => Option.Empty<UserMessage>());
         }
 
-        public Task<Unit> CreateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
+        public Task<Unit> CreateRecipe(Func<IRecipe, IEnumerable<IIngredient>> getIngredients)
         {
             var recipe = Models.Recipe.Create(
                 CurrentAccount,
@@ -83,7 +83,7 @@ namespace SmartRecipes.Mobile.ViewModels
             return MyRecipesHandler.Add(environment, recipe, getIngredients(recipe));
         }
 
-        public Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredientAmount>> getIngredients)
+        public Task<Unit> UpdateRecipe(Func<IRecipe, IEnumerable<IIngredient>> getIngredients)
         {
             var recipe = Models.Recipe.Create(
                 Recipe.Id.Value,

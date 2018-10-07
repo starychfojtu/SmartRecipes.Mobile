@@ -5,17 +5,17 @@ namespace SmartRecipes.Mobile.Models
 {
     public struct Amount : IAmount
     {
-        public Amount(int count, AmountUnit unit)
+        public Amount(float count, AmountUnit unit)
         {
             Unit = unit;
             Count = count < 0 ? 0 : count;
         }
 
-        public int Count { get; }
+        public float Count { get; }
 
         public AmountUnit Unit { get; }
 
-        public IAmount WithCount(int count)
+        public IAmount WithCount(float count)
         {
             return new Amount(count, Unit);
         }
@@ -35,16 +35,6 @@ namespace SmartRecipes.Mobile.Models
             return a1.Unit == a2.Unit && a1.Count < a2.Count;
         }
 
-        public static bool Equals(IAmount a1, IAmount a2)
-        {
-            return a1.Unit == a2.Unit && a1.Count == a2.Count;
-        }
-
-        public static bool IsLessThanOrEquals(IAmount a1, IAmount a2)
-        {
-            return IsLessThan(a1, a2) || Equals(a1, a2);
-        }
-
         public static IOption<IAmount> Add(IAmount a1, IAmount a2)
         {
             return CountOperation((c1, c2) => c1 + c2, a1, a2);
@@ -55,7 +45,7 @@ namespace SmartRecipes.Mobile.Models
             return CountOperation((c1, c2) => c1 - c2, a1, a2);
         }
 
-        private static IOption<IAmount> CountOperation(Func<int, int, int> op, IAmount first, IAmount second)
+        private static IOption<IAmount> CountOperation(Func<float, float, float> op, IAmount first, IAmount second)
         {
             var validOperation = first.Unit == second.Unit;
             var amount = validOperation

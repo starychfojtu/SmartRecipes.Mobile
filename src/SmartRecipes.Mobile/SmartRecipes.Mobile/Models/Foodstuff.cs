@@ -25,7 +25,7 @@ namespace SmartRecipes.Mobile.Models
             set { _ImageUrlString = value.AbsoluteUri; }
         }
 
-        public int _BaseCount { get; set; }
+        public float _BaseCount { get; set; }
         public AmountUnit _BaseUnit { get; set; }
         [Ignore]
         public IAmount BaseAmount
@@ -38,7 +38,7 @@ namespace SmartRecipes.Mobile.Models
             }
         }
 
-        public int _StepCount { get; set; }
+        public float _StepCount { get; set; }
         public AmountUnit _StepUnit { get; set; }
         [Ignore]
         public IAmount AmountStep
