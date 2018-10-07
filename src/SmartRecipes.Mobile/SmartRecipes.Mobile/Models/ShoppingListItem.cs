@@ -4,28 +4,24 @@ namespace SmartRecipes.Mobile.Models
 {
     public class ShoppingListItem : FoodstuffAmount, IShoppingListItem
     {
-        private ShoppingListItem(Guid id, Guid shoppingListOwnerId, Guid foodstuffId, IAmount amount) : base(id, foodstuffId, amount)
+        private ShoppingListItem(Guid shoppingListId, Guid foodstuffId, float amount)
+            : base(shoppingListId.ToString() + foodstuffId, foodstuffId, amount)
         {
-            ShoppingListOwnerId = shoppingListOwnerId;
+            ShoppingListId = shoppingListId;
         }
 
         public ShoppingListItem() { /* SQLite */ }
 
-        public Guid ShoppingListOwnerId { get; set; }
+        public Guid ShoppingListId { get; set; }
 
-        public IShoppingListItem WithAmount(IAmount amount)
+        public IShoppingListItem WithAmount(float amount)
         {
-            return new ShoppingListItem(Id, ShoppingListOwnerId, FoodstuffId, amount);
+            return new ShoppingListItem(ShoppingListId, FoodstuffId, amount);
         }
 
-        public static IShoppingListItem Create(IAccount owner, IFoodstuff foodstuff, IAmount amount)
+        public static IShoppingListItem Create(Guid shoppingListId, Guid foodstuffId, float amount)
         {
-            return new ShoppingListItem(Guid.NewGuid(), owner.Id, foodstuff.Id, amount);
-        }
-
-        public static IShoppingListItem Create(Guid id, Guid shoppingListOwnerId, Guid foodstuffId, IAmount amount)
-        {
-            return new ShoppingListItem(id, shoppingListOwnerId, foodstuffId, amount);
+            return new ShoppingListItem(shoppingListId, foodstuffId, amount);
         }
     }
 }

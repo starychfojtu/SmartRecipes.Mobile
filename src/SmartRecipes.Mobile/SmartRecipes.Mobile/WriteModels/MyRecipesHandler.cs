@@ -26,8 +26,8 @@ namespace SmartRecipes.Mobile.WriteModels
         {
             return Try.Create(unit =>
             {
-                var recipeInShoppingList = environment.Db.GetTableMapping<RecipeInShoppingList>();
-                var recipeInShoppingListRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(RecipeInShoppingList.RecipeId));
+                var recipeInShoppingList = environment.Db.GetTableMapping<ShoppingListRecipeItem>();
+                var recipeInShoppingListRecipeId = recipeInShoppingList.FindColumnWithPropertyName(nameof(ShoppingListRecipeItem.RecipeId));
                 var deleteRecipesInShoppingLists = $"DELETE FROM {recipeInShoppingList.TableName} WHERE {recipeInShoppingListRecipeId.Name} = ?";
                 
                 var ingredientAmounts = environment.Db.GetTableMapping<Ingredient>();

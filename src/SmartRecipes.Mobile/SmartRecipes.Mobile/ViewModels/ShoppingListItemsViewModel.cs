@@ -36,7 +36,7 @@ namespace SmartRecipes.Mobile.ViewModels
         public override Task<Unit> InitializeAsync() =>
             ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
                 .Map(amounts => requiredAmounts = amounts)
-                .Bind((IImmutableDictionary<IFoodstuff, IAmount> _) => ShoppingListRepository.GetItems(CurrentAccount.Id))
+                .Bind((IImmutableDictionary<IFoodstuff, IAmount> _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
                 .Map(items => UpdateShoppingListItems(items))
                 .Execute(environment);
         

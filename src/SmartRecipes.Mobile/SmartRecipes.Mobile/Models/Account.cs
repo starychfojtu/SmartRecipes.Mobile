@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Mail;
+using SQLite;
 
 namespace SmartRecipes.Mobile.Models
 {
@@ -16,15 +17,15 @@ namespace SmartRecipes.Mobile.Models
 
         public Guid Id { get; }
         
-        public string _Email { get; set; }
+        [Ignore]
         public MailAddress Email => new MailAddress(_Email);
+        public string _Email { get; set; }
         
-        public string _AccessToken { get; set; }
+        [Ignore]
         public AccessToken AccessToken => new AccessToken(_AccessToken);
+        public string _AccessToken { get; set; }
 
-        public static IAccount Create(Guid id, MailAddress email, AccessToken accessToken)
-        {
-            return new Account(id, email, accessToken);
-        }
+        public static IAccount Create(Guid id, MailAddress email, AccessToken accessToken) =>
+            new Account(id, email, accessToken);
     }
 }

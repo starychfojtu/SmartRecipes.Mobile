@@ -13,12 +13,7 @@ namespace SmartRecipes.Mobile.ReadModels.Dto
         public IFoodstuff Foodstuff { get; }
 
         public IShoppingListItem Item { get; }
-
-        public IAmount Amount
-        {
-            get { return Item.Amount; }
-        }
-
+        
         public ShoppingListItemWithFoodstuff WithItemAmount(IShoppingListItem item)
         {
             return new ShoppingListItemWithFoodstuff(Foodstuff, item);

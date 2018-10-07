@@ -18,12 +18,12 @@ namespace SmartRecipes.Mobile.ViewModels
     {
         private readonly Environment environment;
 
-        private IImmutableList<ShoppingListRecipeItem> recipeItems;
+        private IImmutableList<ShoppingListRecipeItemWithDetail> recipeItems;
 
         public ShoppingListRecipesViewModel(Environment environment)
         {
             this.environment = environment;
-            recipeItems = ImmutableList.Create<ShoppingListRecipeItem>();
+            recipeItems = ImmutableList.Create<ShoppingListRecipeItemWithDetail>();
         }
 
         public IEnumerable<RecipeCellViewModel> Recipes => 
@@ -36,22 +36,22 @@ namespace SmartRecipes.Mobile.ViewModels
                 .Map(items => UpdateRecipeItems(items))
                 .Execute(environment);
             
-        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Environment, ShoppingListRecipeItem, ITry<Task<Unit>>> action) =>
+        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Environment, ShoppingListRecipeItemWithDetail, ITry<Task<Unit>>> action) =>
             recipeItems.First(r => r.Detail.Recipe.Equals(recipe))
                 .Pipe(item => action(environment, item).Map(task => task.Map(_ => item)))
                 .Map(itemTask => itemTask.Map(i => UpdateRecipeItems(recipeItems.Remove(i))))
                 .MapToUserMessageAsync(_ => UserMessages.Deleted().ToOption());
 
-        private Unit UpdateRecipeItems(IEnumerable<ShoppingListRecipeItem> items) =>
+        private Unit UpdateRecipeItems(IEnumerable<ShoppingListRecipeItemWithDetail> items) =>
             (recipeItems = items.ToImmutableList())
                 .Pipe(_ => RaisePropertyChanged(nameof(Recipes)));
         
-        private RecipeCellViewModel ToViewModel(ShoppingListRecipeItem item) => 
+        private RecipeCellViewModel ToViewModel(ShoppingListRecipeItemWithDetail itemWithDetail) => 
             new RecipeCellViewModel(
-                item.Detail,
-                item.RecipeInShoppingList.PersonCount.ToOption(),
+                itemWithDetail.Detail,
+                itemWithDetail.ShoppingListRecipeItem.PersonCount.ToOption(),
                 new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.Cook(da, i)), Icon.Done(), 1),
-                new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.RemoveFromShoppingList(da, i.RecipeInShoppingList)), Icon.CartRemove(), 2)
+                new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.RemoveFromShoppingList(da, i.ShoppingListRecipeItem)), Icon.CartRemove(), 2)
             );
     }
 }

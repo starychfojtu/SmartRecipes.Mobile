@@ -2,16 +2,16 @@
 
 namespace SmartRecipes.Mobile.Models
 {
-    public interface IRecipeInShoppingList
+    public interface IShoppingListRecipeItem
     {
         Guid Id { get; }
 
         Guid RecipeId { get; }
 
-        Guid ShoppingListOwnerId { get; }
+        Guid ShoppingListId { get; }
 
         int PersonCount { get; }
 
-        IRecipeInShoppingList AddPersons(int count);
+        IShoppingListRecipeItem AddPersons(int count);
     }
 }

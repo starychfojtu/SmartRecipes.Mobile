@@ -20,6 +20,7 @@ namespace SmartRecipes.Mobile.Infrastructure
             var types = new Dictionary<Type, Type>
             {
                 { typeof(SignInPage), typeof(SignInViewModel) },
+                { typeof(SignUpPage), typeof(SignUpViewModel) },
                 { typeof(ShoppingListItemsPage), typeof(ShoppingListItemsViewModel) },
                 { typeof(ShoppingListRecipesPage), typeof(ShoppingListRecipesViewModel) },
                 { typeof(FoodstuffSearchPage), typeof(FoodstuffSearchViewModel) },

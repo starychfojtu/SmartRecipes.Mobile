@@ -4,10 +4,10 @@ namespace SmartRecipes.Mobile.Models
 {
     public interface IFoodstuffAmount
     {
-        Guid Id { get; }
+        string Id { get; }
 
         Guid FoodstuffId { get; }
 
-        IAmount Amount { get; }
+        float Amount { get; }
     }
 }

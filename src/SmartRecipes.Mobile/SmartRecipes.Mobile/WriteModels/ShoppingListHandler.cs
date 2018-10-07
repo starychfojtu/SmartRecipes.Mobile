@@ -12,6 +12,7 @@ using SmartRecipes.Mobile.ReadModels;
 using SmartRecipes.Mobile.ReadModels.Dto;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
 using ShoppingListItem = SmartRecipes.Mobile.Models.ShoppingListItem;
+using ShoppingListRecipeItem = SmartRecipes.Mobile.Models.ShoppingListRecipeItem;
 
 namespace SmartRecipes.Mobile.WriteModels
 {
@@ -23,27 +24,27 @@ namespace SmartRecipes.Mobile.WriteModels
                 .GetRecipeItems(owner)
                 .Select(items => items.FirstOption(i => i.Detail.Recipe.Equals(recipe)))
                 .Bind(item => item.Match(
-                    i => AddPersonCount(i.RecipeInShoppingList, personCount),
+                    i => AddPersonCount(i.ShoppingListRecipeItem, personCount),
                     _ => CreateRecipeInShoppingList(recipe, owner, personCount)
                 ));
         }
         
-        public static IShoppingListItem Increase(ReadModels.Dto.ShoppingListItemWithFoodstuff itemWithFoodstuff)
+        public static IShoppingListItem Increase(ShoppingListItemWithFoodstuff itemWithFoodstuff)
         {
             return ChangeAmount((a1, a2) => Amount.Add(a1, a2), itemWithFoodstuff);
         }
 
-        public static IShoppingListItem Decrease(ReadModels.Dto.ShoppingListItemWithFoodstuff itemWithFoodstuff)
+        public static IShoppingListItem Decrease(ShoppingListItemWithFoodstuff itemWithFoodstuff)
         {
             return ChangeAmount((a1, a2) => Amount.Substract(a1, a2), itemWithFoodstuff);
         }
 
-        public static ITry<Task<Unit>> Cook(Environment environment, ShoppingListRecipeItem recipeItem)
+        public static ITry<Task<Unit>> Cook(Environment environment, ReadModels.Dto.ShoppingListRecipeItemWithDetail recipeItemWithDetail)
         {
             return Try.Create(_ =>
             {
-                var ownerId = recipeItem.RecipeInShoppingList.ShoppingListOwnerId;
-                var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(recipeItem);
+                var ownerId = recipeItemWithDetail.ShoppingListRecipeItem.ShoppingListId;
+                var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(recipeItemWithDetail);
                 var shoppingListItemsTask = ShoppingListRepository.GetItems(ownerId)(environment);
                 var itemDictionaryTask = shoppingListItemsTask.Map(
                     items => items.ToImmutableDictionary(i => i.Foodstuff, i => i.Item)
@@ -71,12 +72,12 @@ namespace SmartRecipes.Mobile.WriteModels
                     var itemsToUpdate = items.Get(u => new InvalidOperationException("Not enought ingredients in shopping list."));
                     return environment.Db.UpdateAsync(itemsToUpdate.Values);
                 });
-            }).FlatMap(_ => RemoveFromShoppingList(environment, recipeItem.RecipeInShoppingList));
+            }).FlatMap(_ => RemoveFromShoppingList(environment, recipeItemWithDetail.ShoppingListRecipeItem));
         }
 
-        public static ITry<Task<Unit>> RemoveFromShoppingList(Environment environment, IRecipeInShoppingList recipe)
+        public static ITry<Task<Unit>> RemoveFromShoppingList(Environment environment, IShoppingListRecipeItem shoppingListRecipe)
         {
-            return Try.Create(_ => environment.Db.Delete(recipe));
+            return Try.Create(_ => environment.Db.Delete(shoppingListRecipe));
         }
         
         public static ITry<Task<Unit>> RemoveFromShoppingList(Environment environment, ReadModels.Dto.ShoppingListItemWithFoodstuff itemWithFoodstuff, IAccount owner)
@@ -85,13 +86,13 @@ namespace SmartRecipes.Mobile.WriteModels
             {
                 var requiredAmounts = ShoppingListRepository.GetRequiredAmounts(owner)(environment);
                 return requiredAmounts.Bind(amounts => amounts.ContainsKey(itemWithFoodstuff.Foodstuff)
-                    ? throw new InvalidOperationException("Cannot remove ingredient of recipe in shopping list. Remvoe the recipe first.")
+                    ? throw new InvalidOperationException("Cannot remove ingredient of shoppingListRecipe in shopping list. Remvoe the shoppingListRecipe first.")
                     : environment.Db.Delete(itemWithFoodstuff.Item)
                 );
             });
         }
 
-        public static Task<IEnumerable<ReadModels.Dto.ShoppingListItemWithFoodstuff>> AddToShoppingList(Environment environment, IAccount owner, IEnumerable<IFoodstuff> foodstuffs)
+        public static Task<IEnumerable<ShoppingListItemWithFoodstuff>> AddToShoppingList(Environment environment, IAccount owner, IEnumerable<IFoodstuff> foodstuffs)
         {
             throw new NotImplementedException();
 //            return
@@ -133,16 +134,16 @@ namespace SmartRecipes.Mobile.WriteModels
             {
                 var newItemAmounts = GetRecipeComplementOfShoppingList(recipe, owner)(env);
 
-                var recipeTask = env.Db.AddAsync(RecipeInShoppingList.Create(recipe, owner, personCount).ToEnumerable());
+                var recipeTask = env.Db.AddAsync(ShoppingListRecipeItem.Create(recipe, owner, personCount).ToEnumerable());
                 var amountsTask = newItemAmounts.Map(a => env.Db.AddAsync(a));
 
                 return recipeTask.Bind(_ => amountsTask).ToUnit();
             };
         }
 
-        private static Monad.Reader<Environment, Task<Unit>> AddPersonCount(IRecipeInShoppingList recipe, int personCount)
+        private static Monad.Reader<Environment, Task<Unit>> AddPersonCount(IShoppingListRecipeItem shoppingListRecipe, int personCount)
         {
-            return env => env.Db.UpdateAsync(recipe.AddPersons(personCount));
+            return env => env.Db.UpdateAsync(shoppingListRecipe.AddPersons(personCount));
         }
 
         private static Monad.Reader<Environment, Task<IEnumerable<IShoppingListItem>>> GetRecipeComplementOfShoppingList(IRecipe recipe, IAccount owner)

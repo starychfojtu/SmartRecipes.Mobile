@@ -4,8 +4,8 @@ namespace SmartRecipes.Mobile.Models
 {
     public interface IShoppingListItem : IFoodstuffAmount
     {
-        Guid ShoppingListOwnerId { get; }
+        Guid ShoppingListId { get; }    
 
-        IShoppingListItem WithAmount(IAmount amount);
+        IShoppingListItem WithAmount(float amount);
     }
 }
