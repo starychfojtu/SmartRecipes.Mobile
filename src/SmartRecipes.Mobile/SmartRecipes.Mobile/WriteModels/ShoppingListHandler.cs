@@ -102,6 +102,11 @@ namespace SmartRecipes.Mobile.WriteModels
 //                from _2 in Update(environment, newItemAmounts)
 //                select newItemAmounts.Select(fa => new ShoppingListItem(newFoodstuffs[fa.FoodstuffId], fa));
         }
+        
+        public static Task<Unit> Update(Environment environment, IShoppingListItemAmount itemAmount)
+        {
+            return Update(environment, ImmutableList.Create(itemAmount));
+        }
 
         public static async Task<Unit> Update(Environment environment, IImmutableList<IShoppingListItemAmount> itemAmounts)
         {

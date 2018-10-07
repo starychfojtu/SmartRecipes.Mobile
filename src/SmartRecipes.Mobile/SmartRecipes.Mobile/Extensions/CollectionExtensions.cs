@@ -9,7 +9,7 @@ namespace SmartRecipes.Mobile.Extensions
 {
     public static class CollectionExtensions
     {
-        public static IImmutableList<T> Replace<T>(this IImmutableList<T> list, T item, T replacement)
+        public static IImmutableList<T> ReplaceItem<T>(this IImmutableList<T> list, T item, T replacement)
         {
             return list.Remove(item).Add(replacement);
         }

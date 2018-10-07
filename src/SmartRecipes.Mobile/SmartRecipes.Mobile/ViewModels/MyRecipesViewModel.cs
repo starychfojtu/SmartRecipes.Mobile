@@ -12,28 +12,26 @@ namespace SmartRecipes.Mobile.ViewModels
 {
     public class MyRecipesViewModel : ViewModel
     {
-        private readonly Environment _environment;
+        private readonly Environment environment;
 
         public MyRecipesViewModel(Environment environment)
         {
-            this._environment = environment;
+            this.environment = environment;
         }
 
         public IEnumerable<RecipeCellViewModel> Recipes { get; private set; }
 
-        public override async Task InitializeAsync()
-        {
-            await UpdateRecipesAsync();
-        }
+        public override Task<Unit> InitializeAsync() =>
+            UpdateRecipesAsync();
 
         public Task AddRecipe()
         {
             return Navigation.CreateRecipe();
         }
 
-        public async Task UpdateRecipesAsync()
+        public async Task<Unit> UpdateRecipesAsync()
         {
-            var recipeDetails = await RecipeRepository.GetMyRecipeDetails()(_environment);
+            var recipeDetails = await RecipeRepository.GetMyRecipeDetails()(environment);
             Recipes = recipeDetails.Select(detail => new RecipeCellViewModel(
                 detail,
                 Option.Empty<int>(),
@@ -42,18 +40,19 @@ namespace SmartRecipes.Mobile.ViewModels
                 new UserAction<IRecipe>(r => Task.FromResult(DeleteRecipe(r)), Icon.Delete(), 3)
             ));
             RaisePropertyChanged(nameof(Recipes));
+            return Unit.Value;
         }
 
         public async Task<IOption<UserMessage>> EditRecipe(IRecipe recipe)
         {
-            var detail = await RecipeRepository.GetDetail(recipe)(_environment);
+            var detail = await RecipeRepository.GetDetail(recipe)(environment);
             await Navigation.EditRecipe(detail);
             return Option.Empty<UserMessage>();
         }
 
         public IOption<UserMessage> DeleteRecipe(IRecipe recipe)
         {
-            return MyRecipesHandler.Delete(_environment, recipe)
+            return MyRecipesHandler.Delete(environment, recipe)
                 .FlatMap(u => Try.Create(_ => InitializeAsync().ToUnit()))
                 .MapToUserMessage(_ => UserMessages.Deleted().ToOption());
         }
@@ -61,7 +60,7 @@ namespace SmartRecipes.Mobile.ViewModels
         private Task<IOption<UserMessage>> AddToShoppingList(IRecipe recipe)
         {
             return ShoppingListHandler
-                .AddToShoppingList(recipe, CurrentAccount, recipe.PersonCount)(_environment)
+                .AddToShoppingList(recipe, CurrentAccount, recipe.PersonCount)(environment)
                 .Map(_ => UserMessages.Added().ToOption());
         }
     }

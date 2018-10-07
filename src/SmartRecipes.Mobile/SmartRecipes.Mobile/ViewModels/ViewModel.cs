@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Threading.Tasks;
-using SmartRecipes.Mobile.Infrastructure;
+using FuncSharp;
+using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Models;
 
 namespace SmartRecipes.Mobile.ViewModels
@@ -8,17 +9,16 @@ namespace SmartRecipes.Mobile.ViewModels
     public class ViewModel : INotifyPropertyChanged
     {
         protected IAccount CurrentAccount => null;
-        
-        protected void RaisePropertyChanged(string propertyName)
+
+        protected Unit RaisePropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            return Unit.Value;
         }
-
+            
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public virtual Task InitializeAsync()
-        {
-            return Task.FromResult(false);
-        }
+        public virtual Task<Unit> InitializeAsync() =>
+            Unit.Value.Async();
     }
 }
