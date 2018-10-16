@@ -13,5 +13,7 @@ namespace SmartRecipes.Mobile.Models
         IAmount BaseAmount { get; }
 
         IAmount AmountStep { get; }
+        
+        AmountUnit Unit { get; }
     }
 }

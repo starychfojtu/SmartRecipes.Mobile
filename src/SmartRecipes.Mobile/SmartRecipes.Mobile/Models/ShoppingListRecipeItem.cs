@@ -2,16 +2,16 @@
 
 namespace SmartRecipes.Mobile.Models
 {
-    public sealed class ShoppingListRecipeItem : Entity, IShoppingListRecipeItem
+    public sealed class ShoppingListRecipeItem : ComposedKeyEntity, IShoppingListRecipeItem
     {
-        private ShoppingListRecipeItem(Guid recipeId, Guid shoppingListId, int personCount) : base(id)
+        private ShoppingListRecipeItem(Guid recipeId, Guid shoppingListId, int personCount) : base(recipeId.ToString() + shoppingListId)
         {
             RecipeId = recipeId;
             ShoppingListId = shoppingListId;
             PersonCount = personCount;
         }
 
-        public ShoppingListRecipeItem() : base(Guid.Empty) { /* sqlite */ }
+        public ShoppingListRecipeItem() { /* sqlite */ }
 
         public Guid RecipeId { get; set; }
 
@@ -21,12 +21,12 @@ namespace SmartRecipes.Mobile.Models
         
         public IShoppingListRecipeItem AddPersons(int count)
         {
-            return new ShoppingListRecipeItem(,RecipeId, ShoppingListId, PersonCount + count);
+            return new ShoppingListRecipeItem(RecipeId, ShoppingListId, PersonCount + count);
         }
 
-        public static IShoppingListRecipeItem Create(Guid shoppingListId, Guid recipeId,, int personCount)
+        public static IShoppingListRecipeItem Create(Guid shoppingListId, Guid recipeId, int personCount)
         {
-            return new ShoppingListRecipeItem(,recipeId, shoppingListId, personCount);
+            return new ShoppingListRecipeItem(recipeId, shoppingListId, personCount);
         }
     }
 }

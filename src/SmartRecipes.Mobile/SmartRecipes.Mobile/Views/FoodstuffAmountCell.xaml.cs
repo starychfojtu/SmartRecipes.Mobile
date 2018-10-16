@@ -2,6 +2,7 @@
 using Xamarin.Forms;
 using SmartRecipes.Mobile.ViewModels;
 using FFImageLoading.Transformations;
+using FuncSharp;
 using Xamarin.Forms.Internals;
 
 namespace SmartRecipes.Mobile.Views
@@ -14,8 +15,8 @@ namespace SmartRecipes.Mobile.Views
 
             Image.Transformations.Add(new CircleTransformation());
 
-            MinusButton.Clicked += async (s, e) => await ViewModel.OnMinus.Invoke();
-            PlusButton.Clicked += async (s, e) => await ViewModel.OnPlus.Invoke();
+            MinusButton.Clicked += async (s, e) => await ViewModel.OnMinus.Invoke(Unit.Value);
+            PlusButton.Clicked += async (s, e) => await ViewModel.OnPlus.Invoke(Unit.Value);
         }
 
         private FoodstuffAmountCellViewModel ViewModel => BindingContext as FoodstuffAmountCellViewModel;
@@ -27,9 +28,10 @@ namespace SmartRecipes.Mobile.Views
             
             if (ViewModel != null)
             {
+                var foodstuff = ViewModel.Foodstuff;
                 var amountText = ViewModel.RequiredAmount.Match(
-                    a => $"{ViewModel.Amount.Count} / {a.Count} {a.Unit.ToString()}",
-                    _ => ViewModel.Amount.ToString()
+                    a => $"{ViewModel.Amount} / {a} {foodstuff.BaseAmount.Unit.ToString()}",
+                    _ => foodstuff.BaseAmount.WithCount(ViewModel.Amount).ToString()
                 );
 
                 NameLabel.Text = ViewModel.Foodstuff.Name;

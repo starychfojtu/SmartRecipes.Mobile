@@ -1,9 +1,6 @@
-﻿using System;
-using SmartRecipes.Mobile.Models;
-
-namespace SmartRecipes.Mobile.ApiDto
+﻿namespace SmartRecipes.Mobile.ApiDto
 {
-    public class ChangeFoodstuffAmountResponse
+    public class ChangeFoodstuffAmountResponse : ShoppingListResponse
     {
     }
 }

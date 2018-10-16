@@ -38,13 +38,13 @@ namespace SmartRecipes.Mobile.Infrastructure
 
             await viewModel.InitializeAsync();
 
-            viewModel.Mode = EditRecipeMode.Edit;
-            viewModel.Ingredients = ingredients.ToImmutableDictionary(i => i.Foodstuff, i => i.Amount);
-            viewModel.Recipe.Id = recipe.Id;
-            viewModel.Recipe.Name.Value = recipe.Name;
-            viewModel.Recipe.ImageUrl = recipe.ImageUrl.AbsoluteUri;
-            viewModel.Recipe.PersonCount.Value = recipe.PersonCount;
-            viewModel.Recipe.Text = recipe.Text;
+//            viewModel.Mode = EditRecipeMode.Edit;
+//            viewModel.Ingredients = ingredients.ToImmutableDictionary(i => i.Foodstuff, i => i.Ingredient.Amount);
+//            viewModel.Recipe.Id = recipe.Id;
+//            viewModel.Recipe.Name.Value = recipe.Name;
+//            viewModel.Recipe.ImageUrl = recipe.ImageUrl.AbsoluteUri;
+//            viewModel.Recipe.PersonCount.Value = recipe.PersonCount;
+//            viewModel.Recipe.Text = recipe.Text;
 
             return new EditRecipePage(viewModel);
         }

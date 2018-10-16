@@ -3,19 +3,15 @@ using SQLite;
 
 namespace SmartRecipes.Mobile.Models
 {
-    public abstract class FoodstuffAmount : IFoodstuffAmount
+    public abstract class FoodstuffAmount : ComposedKeyEntity, IFoodstuffAmount
     {
-        protected FoodstuffAmount(string id, Guid foodstuffId, float amount)
+        protected FoodstuffAmount(string id, Guid foodstuffId, float amount) : base(id)
         {
-            Id = id;
             FoodstuffId = foodstuffId;
             Amount = amount;
         }
 
         protected FoodstuffAmount() { /* SQLite */ }
-
-        [PrimaryKey]
-        public string Id { get; set; }
 
         public Guid FoodstuffId { get; set; }
         

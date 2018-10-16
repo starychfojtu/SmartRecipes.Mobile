@@ -10,10 +10,10 @@ namespace SmartRecipes.Mobile.ViewModels
     {
         public FoodstuffAmountCellViewModel(
             IFoodstuff foodstuff,
-            IAmount amount,
-            IOption<IAmount> requiredAmount,
-            Func<Task> onPlus,
-            Func<Task> onMinus,
+            float amount,
+            IOption<float> requiredAmount,
+            Func<Unit, Task> onPlus,
+            Func<Unit, Task> onMinus,
             params UserAction<Unit>[] menuActions)
         {
             Foodstuff = foodstuff;
@@ -26,13 +26,13 @@ namespace SmartRecipes.Mobile.ViewModels
 
         public IFoodstuff Foodstuff { get; }
 
-        public IAmount Amount { get; }
+        public float Amount { get; }
 
-        public IOption<IAmount> RequiredAmount { get; }
+        public IOption<float> RequiredAmount { get; }
 
-        public Func<Task> OnPlus { get; }
+        public Func<Unit, Task> OnPlus { get; }
 
-        public Func<Task> OnMinus { get; }
+        public Func<Unit, Task> OnMinus { get; }
         
         public UserAction<Unit>[] MenuActions { get; }
     }

@@ -30,7 +30,7 @@ namespace SmartRecipes.Mobile.Models
         [Ignore]
         public IAmount BaseAmount
         {
-            get { return new Amount(_BaseCount, _BaseUnit); }
+            get { return Amount.Create(_BaseCount, _BaseUnit); }
             set
             {
                 _BaseCount = value.Count;
@@ -43,13 +43,16 @@ namespace SmartRecipes.Mobile.Models
         [Ignore]
         public IAmount AmountStep
         {
-            get { return new Amount(_StepCount, _StepUnit); }
+            get { return Amount.Create(_StepCount, _StepUnit); }
             set
             {
                 _StepCount = value.Count;
                 _StepUnit = value.Unit;
             }
         }
+
+        public AmountUnit Unit =>
+            _BaseUnit;
 
         public static IFoodstuff Create(Guid id, string name, Uri imageUrl, IAmount baseAmount, IAmount amountStep)
         {

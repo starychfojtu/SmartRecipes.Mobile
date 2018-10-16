@@ -11,6 +11,7 @@ using SmartRecipes.Mobile.Models;
 using SmartRecipes.Mobile.Extensions;
 using SmartRecipes.Mobile.Infrastructure;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
+using static SmartRecipes.Mobile.WriteModels.ShoppingListHandler;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
@@ -18,26 +19,27 @@ namespace SmartRecipes.Mobile.ViewModels
     {
         private readonly Environment environment;
 
-        private IImmutableList<ShoppingListItemWithFoodstuff> shoppingListItems { get; set; }
+        private ShoppingListWithItems ShoppingListWithItems { get; set; }
+        
+        private IImmutableDictionary<Guid, IFoodstuff> foodstuffs { get; set; }
 
-        private IImmutableDictionary<IFoodstuff, IAmount> requiredAmounts { get; set; }
+        private RequiredAmounts requiredAmounts { get; set; }
 
         public ShoppingListItemsViewModel(Environment environment)
         {
             this.environment = environment;
-            shoppingListItems = ImmutableList.Create<ShoppingListItemWithFoodstuff>();
         }
 
         public IEnumerable<FoodstuffAmountCellViewModel> ShoppingListItems =>
-            shoppingListItems.Select(i => ToViewModel(i));
+            ShoppingListWithItems.Items.Select(i => ToViewModel(i));
         
         // Initialize
 
         public override Task<Unit> InitializeAsync() =>
             ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
                 .Map(amounts => requiredAmounts = amounts)
-                .Bind((IImmutableDictionary<IFoodstuff, IAmount> _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
-                .Map(items => UpdateShoppingListItems(items))
+                .Bind((RequiredAmounts _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
+                .Map(shoppingList => UpdateShoppingList(shoppingList))
                 .Execute(environment);
         
         // Refresh
@@ -50,43 +52,56 @@ namespace SmartRecipes.Mobile.ViewModels
         public Task<Unit> OpenAddFoodstuffDialog() =>
             Navigation
                 .SelectFoodstuffDialog()
-                .Bind(selected => ShoppingListHandler.AddToShoppingList(environment, CurrentAccount, selected))
-                .Map(newItems => shoppingListItems.Concat(newItems))
-                .Map(allItems => UpdateShoppingListItems(allItems));
-        
-        // Item action
-        
-        private Task<Unit> ShoppingListItemAction(ShoppingListItemWithFoodstuff shoppingListItemWithFoodstuff, Func<ShoppingListItemWithFoodstuff, IShoppingListItem> action) =>
-            action(shoppingListItemWithFoodstuff)
-                .Pipe(newAmount => shoppingListItemWithFoodstuff.WithItemAmount(newAmount))
-                .Pipe(newItem => ShoppingListHandler.Update(environment, newItem.Item).Map(_ => newItem))
-                .Map(newItem => (old: shoppingListItems.First(i => i.Foodstuff.Equals(newItem.Foodstuff)), newer: newItem))
-                .Map(items => shoppingListItems.Replace(items.old, items.newer))
-                .Map(newItems => UpdateShoppingListItems(newItems));
+                .Bind(selected => ShoppingListHandler.Add(CurrentAccount, selected).Execute(environment))
+                .Map(result => result.Success.Get())
+                .Map(shoppingList => UpdateShoppingList(shoppingList));
         
         // Delete item
-        
-        private IOption<UserMessage> DeleteItem(ShoppingListItemWithFoodstuff itemWithFoodstuff) =>
-            ShoppingListHandler
-                .RemoveFromShoppingList(environment, itemWithFoodstuff, CurrentAccount)
-                .Map(_ => UpdateShoppingListItems(shoppingListItems.Remove(itemWithFoodstuff)))
-                .MapToUserMessage(_ => Option.Empty<UserMessage>());
-        
-        // View model helpers
 
-        private FoodstuffAmountCellViewModel ToViewModel(ShoppingListItemWithFoodstuff itemWithFoodstuff) =>
-            new FoodstuffAmountCellViewModel(
-                itemWithFoodstuff.Foodstuff,
-                itemWithFoodstuff.Amount,
-                requiredAmounts.Get(itemWithFoodstuff.Foodstuff),
-                () => ShoppingListItemAction(itemWithFoodstuff, i => ShoppingListHandler.Increase(i)),
-                () => ShoppingListItemAction(itemWithFoodstuff, i => ShoppingListHandler.Decrease(i)),
-                new UserAction<Unit>(_ => DeleteItem(itemWithFoodstuff).Async(), Icon.Delete(), order: 1)
+        private Task<IOption<UserMessage>> Remove(IShoppingListItem item) =>
+            ShoppingListHandler
+                .Remove(CurrentAccount, foodstuffs.Get(item.FoodstuffId).Get().ToEnumerable())
+                .Map(result => ProcessResult(result))
+                .Execute(environment);
+        
+        private IOption<UserMessage> ProcessResult(ITry<ShoppingListWithItems, RemoveFoodstuffsError> result) =>
+            result.Match(
+                s => UpdateShoppingList(s).Pipe(_ => Option.Empty<UserMessage>()),
+                e => e.Match(
+                    RemoveFoodstuffsError.FoodstuffIsRequiredInRecipe, _ => UserMessages.FoodstuffRequiredInRecipe().ToOption(),
+                    RemoveFoodstuffsError.FoodstuffNotInShoppingList, _ => throw new InvalidOperationException()
+                )
             );
 
-        private Unit UpdateShoppingListItems(IEnumerable<ShoppingListItemWithFoodstuff> newShoppingListItems) =>
-            newShoppingListItems.OrderBy(i => i.Foodstuff.Name).ToImmutableList()
-                .Pipe(newItems => shoppingListItems = newItems)
+        // Change Amount
+        
+        private Task<IOption<UserMessage>> ChangeAmount(IShoppingListItem item, float newAmount) =>
+            ShoppingListHandler
+                .ChangeAmount(CurrentAccount, foodstuffs.Get(item.FoodstuffId).Get(), newAmount)
+                .Map(result => ProcessResult(result))
+                .Execute(environment);
+
+        private IOption<UserMessage> ProcessResult(ITry<ShoppingListWithItems, ChangeAmountError> result) =>
+            UpdateShoppingList(result.Success.Get())
+                .Pipe(_ => Option.Empty<UserMessage>());
+        
+        // Shared
+
+        private FoodstuffAmountCellViewModel ToViewModel(IShoppingListItem item) =>
+            ToViewModel(item, foodstuffs.Get(item.FoodstuffId).Get());
+            
+        private FoodstuffAmountCellViewModel ToViewModel(IShoppingListItem item, IFoodstuff foodstuff) =>
+            new FoodstuffAmountCellViewModel(
+                foodstuff,
+                item.Amount,
+                requiredAmounts.Get(foodstuff),
+                _ => ChangeAmount(item, item.Amount + foodstuff.AmountStep.Count),
+                _ => ChangeAmount(item, Math.Max(0, item.Amount - foodstuff.AmountStep.Count)),
+                new UserAction<Unit>(_ => Remove(item), Icon.Delete(), order: 1)
+            );
+
+        private Unit UpdateShoppingList(ShoppingListWithItems shoppingList) =>
+            (ShoppingListWithItems = shoppingList)
                 .Pipe(_ => RaisePropertyChanged(nameof(ShoppingListItems)));
     }
 }

@@ -4,7 +4,7 @@ namespace SmartRecipes.Mobile.Models
 {
     public interface IShoppingListRecipeItem
     {
-        Guid Id { get; }
+        string Id { get; }
 
         Guid RecipeId { get; }
 

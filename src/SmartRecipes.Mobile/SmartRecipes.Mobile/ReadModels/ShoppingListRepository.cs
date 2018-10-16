@@ -52,30 +52,34 @@ namespace SmartRecipes.Mobile.ReadModels
 
         // Get recipe items
         
-        public static Reader<Environment, Task<IEnumerable<ShoppingListRecipeItemWithDetail>>> GetRecipeItems(IAccount owner) =>
+        public static Reader<Environment, Task<IEnumerable<ShoppingListRecipeItemWithDetail>>> GetRecipeItemsWithDetails(IAccount owner) =>
             from recipesInList in GetRecipesInShoppingList(owner)
             from recipes in RecipeRepository.Get(recipesInList.Select(r => r.RecipeId))
             from details in RecipeRepository.GetDetails(recipes)
             select recipesInList.Join(details, r => r.RecipeId, d => d.Recipe.Id, (r, d) => new ShoppingListRecipeItemWithDetail(d, r));
+        
+        //
 
-        public static Reader<Environment, Task<ImmutableDictionary<IFoodstuff, IAmount>>> GetRequiredAmounts(IAccount owner) =>
-            GetRecipeItems(owner).Map(items => items.Aggregate(
-                ImmutableDictionary.Create<IFoodstuff, IAmount>(),
-                (r, item) => r.Merge(GetRequiredAmounts(item), (a1, a2) => Amount.Add(a1, a2).GetOrElse(a2))
-            ));
+        public static Reader<Environment, Task<RequiredAmounts>> GetRequiredAmounts(IAccount owner) =>
+            null;
+//            GetRecipeItemsWithDetails(owner).Map(items => items.Aggregate(
+//                ImmutableDictionary.Create<IFoodstuff, IAmount>(),
+//                (r, item) => r.Merge(GetRequiredAmounts(item), (a1, a2) => Amount.Add(a1, a2).GetOrElse(a2))
+//            ));
         
         public static ImmutableDictionary<IFoodstuff, IAmount> GetRequiredAmounts(ShoppingListRecipeItemWithDetail itemWithDetail)
         {
-            var result = ImmutableDictionary.Create<IFoodstuff, IAmount>();
-            return itemWithDetail.Detail.Ingredients.Aggregate(result, (tempResult, i) =>
-            {
-                var personCountRatio = itemWithDetail.ShoppingListRecipeItem.PersonCount / itemWithDetail.Detail.Recipe.PersonCount;
-                var newAmount = i.Amount.WithCount(i.Amount.Count * personCountRatio); 
-                var totalAmount = tempResult.ContainsKey(i.Foodstuff)
-                    ? Amount.Add(tempResult[i.Foodstuff], newAmount).GetOrElse(newAmount)
-                    : newAmount;
-                return tempResult.SetItem(i.Foodstuff, totalAmount);
-            });
+            return null;
+//            var result = ImmutableDictionary.Create<IFoodstuff, IAmount>();
+//            return itemWithDetail.Detail.Ingredients.Aggregate(result, (tempResult, i) =>
+//            {
+//                var personCountRatio = itemWithDetail.ShoppingListRecipeItem.PersonCount / itemWithDetail.Detail.Recipe.PersonCount;
+//                var newAmount = i.float.WithCount(i.Amount.Count * personCountRatio); 
+//                var totalAmount = tempResult.ContainsKey(i.Foodstuff)
+//                    ? Amount.Add(tempResult[i.Foodstuff], newAmount).GetOrElse(newAmount)
+//                    : newAmount;
+//                return tempResult.SetItem(i.Foodstuff, totalAmount);
+//            });
         }
 
         private static Reader<Environment, Task<IEnumerable<IFoodstuff>>> GetFoodstuffs(IEnumerable<Guid> ids) =>

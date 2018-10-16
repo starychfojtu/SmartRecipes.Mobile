@@ -71,5 +71,10 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             return new UserMessage("Error", "Account already exists.");
         }
+
+        public static UserMessage FoodstuffRequiredInRecipe()
+        {
+            return new UserMessage("Error", "Foodstuff is required by recipe in shopping list.");
+        }
     }
 }

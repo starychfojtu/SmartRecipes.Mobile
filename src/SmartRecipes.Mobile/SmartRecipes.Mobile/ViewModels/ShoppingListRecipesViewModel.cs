@@ -32,7 +32,7 @@ namespace SmartRecipes.Mobile.ViewModels
         // Initialize
         
         public override Task<Unit> InitializeAsync() =>
-            ShoppingListRepository.GetRecipeItems(CurrentAccount)
+            ShoppingListRepository.GetRecipeItemsWithDetails(CurrentAccount)
                 .Map(items => UpdateRecipeItems(items))
                 .Execute(environment);
             

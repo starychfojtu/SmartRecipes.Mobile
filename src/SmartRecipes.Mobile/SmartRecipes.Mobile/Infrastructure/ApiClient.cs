@@ -21,12 +21,18 @@ namespace SmartRecipes.Mobile.Infrastructure
         public static Monad.Reader<Environment, Task<ApiResult<SignUpResponse>>> Post(SignUpRequest request) =>
             Post<SignUpRequest, SignUpResponse>(request, "/signUp", Option.Empty<AccessToken>());
         
+        public static Monad.Reader<Environment, Task<ApiResult<AddFoodstuffsToShoppingListResponse>>> Post(AddFoodstuffsToShoppingListRequest request) =>
+            Post<AddFoodstuffsToShoppingListRequest, AddFoodstuffsToShoppingListResponse>(request, "/shoppingList/addFoodstuffs", request.Token.ToOption());
+        
+        public static Monad.Reader<Environment, Task<ApiResult<RemoveFoodstuffsFromShoppingListResponse>>> Post(RemoveFoodstuffsFromShoppingListRequest request) =>
+            Post<RemoveFoodstuffsFromShoppingListRequest, RemoveFoodstuffsFromShoppingListResponse>(request, "/shoppingList/removeFoodstuffs", request.Token.ToOption());
+
+        public static Monad.Reader<Environment, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(ChangeFoodstuffAmountRequest request) =>
+            Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/shoppingList/changeFoodstuffAmount", request.Token.ToOption());
+
         public static Monad.Reader<Environment, Task<ApiResult<GetShoppingListResponse>>> GetShoppingList(AccessToken token) =>
             Get<GetShoppingListResponse>(new GetShoppingListRequest(), "/shoppingList", token.ToOption());
-        
-        public static Monad.Reader<Environment, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(AccessToken token, ChangeFoodstuffAmountRequest request) =>
-            throw new NotImplementedException();
-        
+
         public static Monad.Reader<Environment, Task<ApiResult<SearchFoodstuffResponse>>> Get(SearchFoodstuffRequest request) =>
             throw new NotImplementedException();
 

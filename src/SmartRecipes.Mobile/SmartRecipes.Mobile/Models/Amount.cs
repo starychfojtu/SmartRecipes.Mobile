@@ -5,7 +5,7 @@ namespace SmartRecipes.Mobile.Models
 {
     public struct Amount : IAmount
     {
-        public Amount(float count, AmountUnit unit)
+        private Amount(float count, AmountUnit unit)
         {
             Unit = unit;
             Count = count < 0 ? 0 : count;
@@ -52,6 +52,11 @@ namespace SmartRecipes.Mobile.Models
                 ? new Amount(op(first.Count, second.Count), first.Unit).ToOption()
                 : Option.Empty<Amount>();
             return amount.Map(a => a as IAmount);
+        }
+        
+        public static IAmount Create(float count, AmountUnit unit)
+        {
+            return new Amount(count, unit);
         }
     }
 }
