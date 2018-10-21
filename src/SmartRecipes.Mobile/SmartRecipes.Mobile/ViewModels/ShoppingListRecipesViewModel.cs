@@ -16,18 +16,22 @@ namespace SmartRecipes.Mobile.ViewModels
 {
     public class ShoppingListRecipesViewModel : ViewModel
     {
+        // TODO: This next
+        
         private readonly Environment environment;
+        
+        private ShoppingListWithItems shoppingList;
 
-        private IImmutableList<ShoppingListRecipeItemWithDetail> recipeItems;
+        private IImmutableDictionary<Guid, RecipeDetail> recipeDetails;
 
         public ShoppingListRecipesViewModel(Environment environment)
         {
             this.environment = environment;
-            recipeItems = ImmutableList.Create<ShoppingListRecipeItemWithDetail>();
+            recipeDetails = ImmutableDictionary.Create<Guid, RecipeDetail>();
         }
 
         public IEnumerable<RecipeCellViewModel> Recipes => 
-            recipeItems.Select(i => ToViewModel(i));
+            shoppingList.RecipeItems.Select(i => ToViewModel(i));
 
         // Initialize
         
@@ -35,6 +39,8 @@ namespace SmartRecipes.Mobile.ViewModels
             ShoppingListRepository.GetRecipeItemsWithDetails(CurrentAccount)
                 .Map(items => UpdateRecipeItems(items))
                 .Execute(environment);
+        
+        // Delete recipe
             
         private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Environment, ShoppingListRecipeItemWithDetail, ITry<Task<Unit>>> action) =>
             recipeItems.First(r => r.Detail.Recipe.Equals(recipe))
@@ -42,14 +48,16 @@ namespace SmartRecipes.Mobile.ViewModels
                 .Map(itemTask => itemTask.Map(i => UpdateRecipeItems(recipeItems.Remove(i))))
                 .MapToUserMessageAsync(_ => UserMessages.Deleted().ToOption());
 
-        private Unit UpdateRecipeItems(IEnumerable<ShoppingListRecipeItemWithDetail> items) =>
-            (recipeItems = items.ToImmutableList())
+        // Helpers
+        
+        private Unit UpdateShoppingList(ShoppingListWithItems newShoppingList) =>
+            (shoppingList = newShoppingList)
                 .Pipe(_ => RaisePropertyChanged(nameof(Recipes)));
         
-        private RecipeCellViewModel ToViewModel(ShoppingListRecipeItemWithDetail itemWithDetail) => 
+        private RecipeCellViewModel ToViewModel(IShoppingListRecipeItem item) => 
             new RecipeCellViewModel(
-                itemWithDetail.Detail,
-                itemWithDetail.ShoppingListRecipeItem.PersonCount.ToOption(),
+                recipeDetails.Get(item.RecipeId).Get(),
+                item.PersonCount.ToOption(),
                 new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.Cook(da, i)), Icon.Done(), 1),
                 new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.RemoveFromShoppingList(da, i.ShoppingListRecipeItem)), Icon.CartRemove(), 2)
             );

@@ -36,11 +36,7 @@ namespace SmartRecipes.Mobile.ViewModels
         // Initialize
 
         public override Task<Unit> InitializeAsync() =>
-            ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
-                .Map(amounts => requiredAmounts = amounts)
-                .Bind((RequiredAmounts _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
-                .Map(shoppingList => UpdateShoppingList(shoppingList))
-                .Execute(environment);
+            UpdateState();
         
         // Refresh
 
@@ -54,7 +50,7 @@ namespace SmartRecipes.Mobile.ViewModels
                 .SelectFoodstuffDialog()
                 .Bind(selected => ShoppingListHandler.Add(CurrentAccount, selected).Execute(environment))
                 .Map(result => result.Success.Get())
-                .Map(shoppingList => UpdateShoppingList(shoppingList));
+                .Bind(shoppingList => UpdateState());
         
         // Delete item
 
@@ -66,7 +62,7 @@ namespace SmartRecipes.Mobile.ViewModels
         
         private IOption<UserMessage> ProcessResult(ITry<ShoppingListWithItems, RemoveFoodstuffsError> result) =>
             result.Match(
-                s => UpdateShoppingList(s).Pipe(_ => Option.Empty<UserMessage>()),
+                s => UpdateState().Pipe(_ => Option.Empty<UserMessage>()),
                 e => e.Match(
                     RemoveFoodstuffsError.FoodstuffIsRequiredInRecipe, _ => UserMessages.FoodstuffRequiredInRecipe().ToOption(),
                     RemoveFoodstuffsError.FoodstuffNotInShoppingList, _ => throw new InvalidOperationException()
@@ -99,9 +95,19 @@ namespace SmartRecipes.Mobile.ViewModels
                 _ => ChangeAmount(item, Math.Max(0, item.Amount - foodstuff.AmountStep.Count)),
                 new UserAction<Unit>(_ => Remove(item), Icon.Delete(), order: 1)
             );
+        
+        private Task<Unit> UpdateState() =>
+            ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
+                .Map(amounts => requiredAmounts = amounts)
+                .Bind((RequiredAmounts _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
+                .Map(shoppingList => UpdateShoppingList(shoppingList))
+                .Bind(shoppingList => FoodstuffRepository.Get(shoppingList.Items.Select(i => i.FoodstuffId)))
+                .Map(fs => foodstuffs = fs.ToImmutableDictionary(f => f.Id))
+                .Map(_ => Unit.Value)
+                .Execute(environment);
 
-        private Unit UpdateShoppingList(ShoppingListWithItems shoppingList) =>
-            (ShoppingListWithItems = shoppingList)
-                .Pipe(_ => RaisePropertyChanged(nameof(ShoppingListItems)));
+        private ShoppingListWithItems UpdateShoppingList(ShoppingListWithItems shoppingList) =>
+            RaisePropertyChanged(nameof(ShoppingListItems))
+                .Pipe(_ => ShoppingListWithItems = shoppingList);
     }
 }
