@@ -76,5 +76,10 @@ namespace SmartRecipes.Mobile.Infrastructure
         {
             return new UserMessage("Error", "Foodstuff is required by recipe in shopping list.");
         }
+
+        public static UserMessage NotEnoughFoodstuffsInShoppingList()
+        {
+            return new UserMessage("Error", "Not enough foodstuffs in shopping list.");
+        }
     }
 }

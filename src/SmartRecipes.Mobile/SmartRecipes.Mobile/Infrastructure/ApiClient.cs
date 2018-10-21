@@ -29,6 +29,9 @@ namespace SmartRecipes.Mobile.Infrastructure
 
         public static Monad.Reader<Environment, Task<ApiResult<ChangeFoodstuffAmountResponse>>> Post(ChangeFoodstuffAmountRequest request) =>
             Post<ChangeFoodstuffAmountRequest, ChangeFoodstuffAmountResponse>(request, "/shoppingList/changeFoodstuffAmount", request.Token.ToOption());
+        
+        public static Monad.Reader<Environment, Task<ApiResult<CookRecipeResponse>>> Post(CookRecipeRequest request) =>
+            Post<CookRecipeRequest, CookRecipeResponse>(request, "/shoppingList/cook", request.Token.ToOption());
 
         public static Monad.Reader<Environment, Task<ApiResult<GetShoppingListResponse>>> GetShoppingList(AccessToken token) =>
             Get<GetShoppingListResponse>(new GetShoppingListRequest(), "/shoppingList", token.ToOption());

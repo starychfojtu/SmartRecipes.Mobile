@@ -15,6 +15,19 @@ namespace SmartRecipes.Mobile.ReadModels
 {
     public static class RecipeRepository
     {
+        // Get details by ids 
+
+        public static Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetDetails(IEnumerable<Guid> recipeIds) =>
+            Get(recipeIds).Bind(recipes => GetDetails(recipes));
+
+// Possible alternative with LINQ
+//        public static Reader<Environment, Task<IEnumerable<RecipeDetail>>> GetDetails(IEnumerable<Guid> recipeIds) =>
+//            from recipes in Get(recipeIds)
+//            from details in GetDetails(recipes)
+//            select details;
+        
+        // Deprecated methods
+        
         // Get my recipes
         
         public static Reader<Environment, Task<IEnumerable<IRecipe>>> GetMyRecipes() =>

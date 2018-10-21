@@ -84,6 +84,27 @@ namespace SmartRecipes.Mobile.WriteModels
                 )),
                 noConn => throw new NotImplementedException()
             );
+        
+        // Cook recipe
+
+        public enum CookRecipeError
+        {
+            NotEnoughFoodstuffsInShoppingList
+        }
+        
+        public static Reader<Environment, Task<ITry<ShoppingListWithItems, CookRecipeError>>> Cook(IAccount owner, IShoppingListRecipeItem item) =>
+            new CookRecipeRequest(owner.AccessToken, item.RecipeId)
+                .Pipe(r => ApiClient.Post(r))
+                .Bind(response => Process(response).Async());
+        
+        private static ITry<ShoppingListWithItems, CookRecipeError> Process(ApiResult<CookRecipeResponse> response) =>
+            response.Match(
+                s => Try.Success<ShoppingListWithItems, CookRecipeError>(ToShoppingList(s)),
+                e => Try.Error<ShoppingListWithItems, CookRecipeError>(e.Message.Match(
+                    "Not enough ingredients.", _ => CookRecipeError.NotEnoughFoodstuffsInShoppingList
+                )),
+                noConn => throw new NotImplementedException()
+            );
             
         // Shared
         
@@ -94,39 +115,11 @@ namespace SmartRecipes.Mobile.WriteModels
                 response.Recipes.Select(i => ShoppingListRecipeItem.Create(response.Id, i.RecipeId, i.PersonCount)
             ));
         
-        // --------
-        // Deprecated methods (not refactored)
-        // --------
+        // Old methods
         
         public static Reader<Environment, Task<Unit>> AddToShoppingList(IRecipe recipe, IAccount owner, int personCount)
         {
-            return ShoppingListRepository
-                .GetRecipeItemsWithDetails(owner)
-                .Select(items => items.FirstOption(i => i.Detail.Recipe.Equals(recipe)))
-                .Bind(item => item.Match(
-                    i => AddPersonCount(i.ShoppingListRecipeItem, personCount),
-                    _ => CreateRecipeInShoppingList(recipe, owner, personCount)
-                ));
-        }
-
-        public static ITry<Task<Unit>> Cook(Environment environment, ReadModels.Dto.ShoppingListRecipeItemWithDetail recipeItemWithDetail)
-        {
             return null;
-        }
-
-        public static ITry<Task<Unit>> RemoveFromShoppingList(Environment environment, IShoppingListRecipeItem shoppingListRecipe)
-        {
-            return Try.Create(_ => environment.Db.Delete(shoppingListRecipe));
-        }
-        
-        private static Monad.Reader<Environment, Task<Unit>> CreateRecipeInShoppingList(IRecipe recipe, IAccount owner, int personCount)
-        {
-            return null;
-        }
-
-        private static Monad.Reader<Environment, Task<Unit>> AddPersonCount(IShoppingListRecipeItem shoppingListRecipe, int personCount)
-        {
-            return env => env.Db.UpdateAsync(shoppingListRecipe.AddPersons(personCount));
         }
     }
 }

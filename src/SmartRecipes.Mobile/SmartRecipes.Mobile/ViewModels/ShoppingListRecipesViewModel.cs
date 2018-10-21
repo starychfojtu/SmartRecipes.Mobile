@@ -11,13 +11,12 @@ using SmartRecipes.Mobile.Infrastructure;
 using SmartRecipes.Mobile.WriteModels;
 using SmartRecipes.Mobile.ReadModels;
 using Environment = SmartRecipes.Mobile.Infrastructure.Environment;
+using static SmartRecipes.Mobile.WriteModels.ShoppingListHandler;
 
 namespace SmartRecipes.Mobile.ViewModels
 {
     public class ShoppingListRecipesViewModel : ViewModel
     {
-        // TODO: This next
-        
         private readonly Environment environment;
         
         private ShoppingListWithItems shoppingList;
@@ -27,7 +26,6 @@ namespace SmartRecipes.Mobile.ViewModels
         public ShoppingListRecipesViewModel(Environment environment)
         {
             this.environment = environment;
-            recipeDetails = ImmutableDictionary.Create<Guid, RecipeDetail>();
         }
 
         public IEnumerable<RecipeCellViewModel> Recipes => 
@@ -36,30 +34,41 @@ namespace SmartRecipes.Mobile.ViewModels
         // Initialize
         
         public override Task<Unit> InitializeAsync() =>
-            ShoppingListRepository.GetRecipeItemsWithDetails(CurrentAccount)
-                .Map(items => UpdateRecipeItems(items))
+            ShoppingListRepository.GetWithItems(CurrentAccount)
+                .Map(newShoppingList => UpdateShoppingList(newShoppingList))
+                .Bind(newShoppingList => RecipeRepository.GetDetails(newShoppingList.RecipeItems.Select(i => i.RecipeId)))
+                .Map(details => recipeDetails = details.ToImmutableDictionary(d => d.Recipe.Id))
+                .Map(_ => Unit.Value)
                 .Execute(environment);
         
-        // Delete recipe
-            
-        private Task<IOption<UserMessage>> RecipeDeleteAction(IRecipe recipe, Func<Environment, ShoppingListRecipeItemWithDetail, ITry<Task<Unit>>> action) =>
-            recipeItems.First(r => r.Detail.Recipe.Equals(recipe))
-                .Pipe(item => action(environment, item).Map(task => task.Map(_ => item)))
-                .Map(itemTask => itemTask.Map(i => UpdateRecipeItems(recipeItems.Remove(i))))
-                .MapToUserMessageAsync(_ => UserMessages.Deleted().ToOption());
+        // Cook recipe
+
+        private Task<IOption<UserMessage>> Cook(IShoppingListRecipeItem item) =>
+            ShoppingListHandler.Cook(CurrentAccount, item)
+                .Map(r => ProcessResult(r))
+                .Execute(environment);
+
+        private IOption<UserMessage> ProcessResult(ITry<ShoppingListWithItems, CookRecipeError> result) =>
+            result.Match(
+                s => UpdateShoppingList(s).Pipe(_ => Option.Empty<UserMessage>()),
+                e => Option.Create(e.Match(
+                    CookRecipeError.NotEnoughFoodstuffsInShoppingList,
+                    _ => UserMessages.NotEnoughFoodstuffsInShoppingList()
+                ))
+            );
 
         // Helpers
-        
-        private Unit UpdateShoppingList(ShoppingListWithItems newShoppingList) =>
-            (shoppingList = newShoppingList)
-                .Pipe(_ => RaisePropertyChanged(nameof(Recipes)));
+
+        private ShoppingListWithItems UpdateShoppingList(ShoppingListWithItems newShoppingList) =>
+            RaisePropertyChanged(nameof(Recipes))
+                .Pipe(_ => shoppingList = newShoppingList);
         
         private RecipeCellViewModel ToViewModel(IShoppingListRecipeItem item) => 
             new RecipeCellViewModel(
                 recipeDetails.Get(item.RecipeId).Get(),
                 item.PersonCount.ToOption(),
-                new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.Cook(da, i)), Icon.Done(), 1),
-                new UserAction<IRecipe>(r => RecipeDeleteAction(r, (da, i) => ShoppingListHandler.RemoveFromShoppingList(da, i.ShoppingListRecipeItem)), Icon.CartRemove(), 2)
+                new UserAction<IRecipe>(_ => Cook(item), Icon.Done(), 1),
+                new UserAction<IRecipe>(_ => Cook(item), Icon.CartRemove(), 2) // TODO: Implement remove action
             );
     }
 }

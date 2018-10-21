@@ -99,13 +99,24 @@ namespace SmartRecipes.Mobile.ViewModels
         private Task<Unit> UpdateState() =>
             ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
                 .Map(amounts => requiredAmounts = amounts)
-                .Bind((RequiredAmounts _) => ShoppingListRepository.GetShoppingListWithItems(CurrentAccount))
+                .Bind((RequiredAmounts _) => ShoppingListRepository.GetWithItems(CurrentAccount))
                 .Map(shoppingList => UpdateShoppingList(shoppingList))
                 .Bind(shoppingList => FoodstuffRepository.Get(shoppingList.Items.Select(i => i.FoodstuffId)))
                 .Map(fs => foodstuffs = fs.ToImmutableDictionary(f => f.Id))
                 .Map(_ => Unit.Value)
                 .Execute(environment);
 
+// Possible LINQ version
+//        private Monad.Reader<Environment, Task<Unit>> UpdateStateLINQVersion() =>
+//            from requiredAmounts in ShoppingListRepository.GetRequiredAmounts(CurrentAccount)
+//            from shoppingList in ShoppingListRepository.GetWithItems(CurrentAccount)
+//            let foodstuffIds = shoppingList.Items.Select(i => i.FoodstuffId)
+//            from foodstuffs in FoodstuffRepository.Get(foodstuffIds)
+//            let _1 = UpdateShoppingList(shoppingList)
+//            let _2 = this.foodstuffs = foodstuffs.ToImmutableDictionary(f => f.Id)
+//            let _3 = this.requiredAmounts = requiredAmounts
+//            select Unit.Value;
+        
         private ShoppingListWithItems UpdateShoppingList(ShoppingListWithItems shoppingList) =>
             RaisePropertyChanged(nameof(ShoppingListItems))
                 .Pipe(_ => ShoppingListWithItems = shoppingList);
